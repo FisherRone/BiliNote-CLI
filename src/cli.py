@@ -62,8 +62,6 @@ def main():
   # 查看密钥配置状态
   bilinote config list
   
-  # 从 .env 迁移配置
-  bilinote config migrate
   
   # 自定义模型：手动编辑 ~/.bilinote/config/models.json
   # 非敏感配置：编辑 ~/.bilinote/config.yaml
@@ -124,9 +122,7 @@ def main():
     
     # model-list 子命令 - 列出所有模型
     model_list_parser = subparsers.add_parser('model-list', help='列出所有已配置的模型')
-    
-    # model-add 子命令已移除，用户可手动编辑 ~/.bilinote/config/models.json
-    
+        
     # model-set-default 子命令 - 设置默认模型
     model_set_default_parser = subparsers.add_parser('model-set-default', help='设置默认模型')
     model_set_default_parser.add_argument('model_id', help='模型ID')
@@ -155,9 +151,6 @@ def main():
     # config list
     config_subparsers.add_parser('list', help='列出所有已知密钥及配置状态')
     
-    # config migrate
-    config_migrate_parser = config_subparsers.add_parser('migrate', help='从 .env 文件迁移配置到 keyring + config.yaml')
-    config_migrate_parser.add_argument('--env-file', default=None, help='.env 文件路径（默认: ~/.bilinote/.env 或 src/.env）')
     
     args = parser.parse_args()
     
@@ -552,7 +545,7 @@ def config_cli(args):
     from app.config_manager import get_config_manager
     
     if not args.config_action:
-        print('请指定配置操作: set, get, delete, list, migrate')
+        print('请指定配置操作: set, get, delete, list')
         print('示例: bilinote config set DEEPSEEK_API_KEY sk-xxx')
         return
     
@@ -582,92 +575,6 @@ def config_cli(args):
             print(f"  {status}  {key:25s}  {desc}")
         print(f"\n使用 bilinote config set <KEY> <VALUE> 设置密钥")
     
-    elif args.config_action == 'migrate':
-        _migrate_from_env(args.env_file)
-
-
-def _migrate_from_env(env_file=None):
-    """从 .env 文件迁移配置到 keyring + config.yaml"""
-    import os
-    from pathlib import Path
-    from app.secret_manager import set_secret, KNOWN_KEYS
-    from app.config_manager import get_config_manager
-    
-    # 查找 .env 文件
-    env_paths = []
-    if env_file:
-        env_paths.append(Path(env_file))
-    else:
-        env_paths.append(Path.home() / ".bilinote" / ".env")
-        # 源码目录
-        project_root = Path(__file__).parent.parent
-        env_paths.append(project_root / "src" / ".env")
-    
-    env_path = None
-    for p in env_paths:
-        if p.exists():
-            env_path = p
-            break
-    
-    if not env_path:
-        print("✗ 未找到 .env 文件，无需迁移")
-        return
-    
-    print(f"找到 .env 文件: {env_path}")
-    
-    # 解析 .env
-    secret_keys = set(KNOWN_KEYS.keys())
-    config_mappings = {
-        "OPENAI_BASE_URL": ("models.openai.base_url", str),
-        "DEEPSEEK_BASE_URL": ("models.deepseek.base_url", str),
-        "GROQ_BASE_URL": ("models.groq.base_url", str),
-        "QWEN_BASE_URL": ("models.qwen.base_url", str),
-        "GEMINI_BASE_URL": ("models.gemini.base_url", str),
-        "OLLAMA_BASE_URL": ("models.ollama.base_url", str),
-        "TRANSCRIBER_TYPE": ("transcriber.default_type", str),
-        "WHISPER_MODEL_SIZE": ("transcriber.whisper_model_size", str),
-        "GROQ_TRANSCRIBER_MODEL": ("transcriber.groq_model", str),
-        
-        "FFMPEG_BIN_PATH": ("ffmpeg_bin_path", str),
-        "OPENAI_MAX_REQUEST_BYTES": ("gpt_client.max_request_bytes", int),
-        "OPENAI_RETRY_ATTEMPTS": ("gpt_client.retry_attempts", int),
-        "OPENAI_RETRY_BACKOFF_SECONDS": ("gpt_client.retry_backoff_seconds", float),
-    }
-    
-    secrets_migrated = 0
-    configs_migrated = 0
-    
-    config_mgr = get_config_manager()
-    
-    with open(env_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            if '=' not in line:
-                continue
-            key, value = line.split('=', 1)
-            key = key.strip()
-            value = value.strip()
-            # 移除引号
-            if value and value[0] in ('"', "'") and value[-1] == value[0]:
-                value = value[1:-1]
-            if not value or value in ('your-api-key-here', 'xxx'):
-                continue
-            
-            if key in secret_keys:
-                set_secret(key, value)
-                secrets_migrated += 1
-                print(f"  ✓ 密钥 {key} → keyring")
-            elif key in config_mappings:
-                yaml_path, type_func = config_mappings[key]
-                config_mgr.set(yaml_path, type_func(value))
-                configs_migrated += 1
-                print(f"  ✓ 配置 {key} → config.yaml ({yaml_path})")
-    
-    print(f"\n迁移完成: {secrets_migrated} 个密钥 → keyring, {configs_migrated} 个配置 → config.yaml")
-    if secrets_migrated > 0 or configs_migrated > 0:
-        print(f"\n💡 建议备份后删除 .env 文件: rm {env_path}")
 
 
 def show_task_status(task_id: str):
