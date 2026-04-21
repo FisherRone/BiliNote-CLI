@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.gpt.prompt import BASE_PROMPT, AI_SUM, SCREENSHOT, LINK, MERGE_PROMPT
+from app.gpt.prompt import BASE_PROMPT, AI_SUM, SCREENSHOT, LINK, MERGE_PROMPT, HISTORY_CONTEXT, CHUNK_INSTRUCTION
 from app.gpt.utils import fix_markdown
 from app.gpt.request_chunker import RequestChunker
 from app.models.transcriber_model import TranscriptSegment
@@ -26,7 +26,11 @@ class UniversalGPT(GPT):
         self.screenshot = False
         self.link = False
         config_mgr = get_config_manager()
-        self.max_request_bytes = config_mgr.get("gpt_client.max_request_bytes", 45 * 1024 * 1024)
+        # Token 预算配置（双层：用户 token_limit + 开发者 token_threshold）
+        self.token_limit = config_mgr.get("gpt_client.token_limit", 128000)
+        self.token_threshold = config_mgr.get("gpt_client.token_threshold", 0.8)
+        self.chunk_history_n = config_mgr.get("gpt_client.chunk_history_n", 3)
+        self.max_request_tokens = int(self.token_limit * self.token_threshold)
         # 使用新的路径管理器
         self.path_manager = get_path_manager()
         # 初始化时缓存重试配置
@@ -45,16 +49,42 @@ class UniversalGPT(GPT):
     def ensure_segments_type(self, segments) -> List[TranscriptSegment]:
         return [TranscriptSegment(**seg) if isinstance(seg, dict) else seg for seg in segments]
 
-    def create_messages(self, segments: List[TranscriptSegment], **kwargs):
+    @staticmethod
+    def _estimate_tokens(text: str) -> int:
+        """按公式估算 Token 数：中文字符×1.8 + 其他字符×0.3"""
+        cn_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+        non_cn_chars = len(text) - cn_chars
+        return int(cn_chars * 1.8 + non_cn_chars * 0.3)
 
-        content_text = generate_base_prompt(
+    def _estimate_messages_tokens(self, messages: list) -> int:
+        """估算 messages 的总 Token 数"""
+        import json
+        text = json.dumps(messages, ensure_ascii=False)
+        return self._estimate_tokens(text)
+
+    def create_messages(self, segments: List[TranscriptSegment], **kwargs):
+        # 1. 系统指令与全局信息
+        system_text = generate_base_prompt(
             title=kwargs.get('title'),
-            segment_text=self._build_segment_text(segments),
             tags=kwargs.get('tags'),
             _format=kwargs.get('_format'),
             style=kwargs.get('style'),
             extras=kwargs.get('extras'),
         )
+
+        # 2. 历史上下文区
+        history_partials = kwargs.get('history_partials', [])
+        if history_partials:
+            system_text += "\n\n" + HISTORY_CONTEXT
+            for partial in history_partials:
+                system_text += f"\n---\n{partial}\n---"
+
+        # 3. 当前块指令
+        system_text += "\n\n" + CHUNK_INSTRUCTION
+
+        # 4. 当前块转录文本
+        segment_text = self._build_segment_text(segments)
+        content_text = system_text + f"\n\n视频分段（格式：开始时间 - 内容）：\n\n{segment_text}"
 
         # ⛳ 组装 content 数组，支持 text + image_url 混合
         content: List[dict] = [{"type": "text", "text": content_text}]
@@ -80,9 +110,7 @@ class UniversalGPT(GPT):
     def list_models(self):
         return self.client.models.list()
 
-    def _estimate_messages_bytes(self, messages: list) -> int:
-        import json
-        return len(json.dumps(messages, ensure_ascii=False).encode("utf-8"))
+
 
     def _build_merge_messages(self, partials: list) -> list:
         merge_text = MERGE_PROMPT + "\n\n" + "\n\n---\n\n".join(partials)
@@ -99,7 +127,8 @@ class UniversalGPT(GPT):
         payload = {
             "model": self.model,
             "temperature": self.temperature,
-            "max_request_bytes": self.max_request_bytes,
+            "max_request_tokens": self.max_request_tokens,
+            "chunk_history_n": self.chunk_history_n,
             "title": source.title,
             "tags": source.tags,
             "format": source._format,
@@ -207,8 +236,8 @@ class UniversalGPT(GPT):
 
         merge_chunker = RequestChunker(
             lambda *_args, **_kwargs: [],
-            self.max_request_bytes,
-            self._estimate_messages_bytes
+            self.max_request_tokens,
+            self._estimate_messages_tokens
         )
 
         current_partials = list(partials)
@@ -247,7 +276,7 @@ class UniversalGPT(GPT):
         def message_builder(segments, image_urls, **kwargs):
             return self.create_messages(segments, video_img_urls=image_urls, **kwargs)
 
-        chunker = RequestChunker(message_builder, self.max_request_bytes, self._estimate_messages_bytes)
+        chunker = RequestChunker(message_builder, self.max_request_tokens, self._estimate_messages_tokens)
 
         try:
             chunks = chunker.chunk(
@@ -279,7 +308,13 @@ class UniversalGPT(GPT):
         if len(partials) > len(chunks):
             partials = []
 
+        # 用于跨块上下文传递的历史结果
+        history_partials = []
+
         for chunk in chunks[len(partials):]:
+            # 取最近 N 个块的总结作为历史上下文
+            recent_history = history_partials[-self.chunk_history_n:]
+
             messages = self.create_messages(
                 chunk.segments,
                 title=source.title,
@@ -287,7 +322,8 @@ class UniversalGPT(GPT):
                 video_img_urls=chunk.image_urls,
                 _format=source._format,
                 style=source.style,
-                extras=source.extras
+                extras=source.extras,
+                history_partials=recent_history,
             )
             try:
                 response = self._chat_completion_create(messages)
@@ -296,7 +332,9 @@ class UniversalGPT(GPT):
                     self._save_checkpoint(checkpoint_key, source_signature, partials, "summarize")
                 raise
 
-            partials.append(response.choices[0].message.content.strip())
+            result = response.choices[0].message.content.strip()
+            partials.append(result)
+            history_partials.append(result)
             if checkpoint_key and source_signature:
                 self._save_checkpoint(checkpoint_key, source_signature, partials, "summarize")
 

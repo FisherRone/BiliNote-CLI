@@ -9,9 +9,9 @@ class ChunkPayload:
 
 
 class RequestChunker:
-    def __init__(self, message_builder: Callable, max_bytes: int, size_estimator: Optional[Callable] = None):
+    def __init__(self, message_builder: Callable, max_size: int, size_estimator: Optional[Callable] = None):
         self.message_builder = message_builder
-        self.max_bytes = max_bytes
+        self.max_size = max_size
         self.size_estimator = size_estimator
 
     def estimate(self, messages) -> int:
@@ -50,7 +50,7 @@ class RequestChunker:
             mid = (lo + hi) // 2
             candidate = self._make_segment(segment, text[:mid])
             size = self._messages_size([candidate], [], **kwargs)
-            if size <= self.max_bytes:
+            if size <= self.max_size:
                 best = mid
                 lo = mid + 1
             else:
@@ -75,7 +75,7 @@ class RequestChunker:
             while seg_idx < len(segments):
                 candidate = batch_segments + [segments[seg_idx]]
                 size = self._messages_size(candidate, [], **kwargs)
-                if size <= self.max_bytes:
+                if size <= self.max_size:
                     batch_segments = candidate
                     seg_idx += 1
                     continue
@@ -102,7 +102,7 @@ class RequestChunker:
                 appended = False
                 for chunk in chunks[-1:]:
                     candidate_images = chunk.image_urls + [image]
-                    if self._messages_size(chunk.segments, candidate_images, **kwargs) <= self.max_bytes:
+                    if self._messages_size(chunk.segments, candidate_images, **kwargs) <= self.max_size:
                         chunk.image_urls = candidate_images
                         appended = True
                         break
@@ -110,8 +110,8 @@ class RequestChunker:
                 if appended:
                     continue
 
-                if self._messages_size([], [image], **kwargs) > self.max_bytes:
-                    raise ValueError("single image payload exceeds max_bytes")
+                if self._messages_size([], [image], **kwargs) > self.max_size:
+                    raise ValueError("single image payload exceeds max_size")
                 chunks.append(ChunkPayload(segments=[], image_urls=[image]))
             return chunks
 
@@ -124,7 +124,7 @@ class RequestChunker:
             for chunk_idx in range(preferred_idx, len(chunks)):
                 chunk = chunks[chunk_idx]
                 candidate_images = chunk.image_urls + [image]
-                if self._messages_size(chunk.segments, candidate_images, **kwargs) <= self.max_bytes:
+                if self._messages_size(chunk.segments, candidate_images, **kwargs) <= self.max_size:
                     chunk.image_urls = candidate_images
                     placed = True
                     break
@@ -132,8 +132,8 @@ class RequestChunker:
             if placed:
                 continue
 
-            if self._messages_size([], [image], **kwargs) > self.max_bytes:
-                raise ValueError("single image payload exceeds max_bytes")
+            if self._messages_size([], [image], **kwargs) > self.max_size:
+                raise ValueError("single image payload exceeds max_size")
             chunks.append(ChunkPayload(segments=[], image_urls=[image]))
 
         return chunks
@@ -150,12 +150,12 @@ class RequestChunker:
                 except TypeError:
                     messages = build_messages(candidate, **kwargs)
                 size = self.estimate(messages)
-                if size <= self.max_bytes:
+                if size <= self.max_size:
                     group = candidate
                     idx += 1
                     continue
                 if not group:
-                    raise ValueError("single text block exceeds max_bytes")
+                    raise ValueError("single text block exceeds max_size")
                 break
             groups.append(group)
         return groups

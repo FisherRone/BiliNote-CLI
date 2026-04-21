@@ -1,0 +1,6 @@
+{
+  "gpt_client": {
+    "token_threshold": 0.8,
+    "chunk_history_n": 3
+  }
+}

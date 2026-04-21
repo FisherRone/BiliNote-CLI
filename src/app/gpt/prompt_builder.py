@@ -21,11 +21,10 @@ note_styles = [
 
 
 # 生成 BASE_PROMPT 函数
-def generate_base_prompt(title, segment_text, tags, _format=None, style=None, extras=None):
-    # 生成 Base Prompt 开头部分
+def generate_base_prompt(title, tags, _format=None, style=None, extras=None):
+    # 生成 Base Prompt 开头部分（系统指令与全局信息，不含转录文本）
     prompt = BASE_PROMPT.format(
         video_title=title,
-        segment_text=segment_text,
         tags=tags
     )
 

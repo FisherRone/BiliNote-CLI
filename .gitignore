@@ -103,6 +103,7 @@ cython_debug/
 # IDE
 .idea/
 .vscode/
+.qoder/
 
 # Ruff
 .ruff_cache/

@@ -51,7 +51,7 @@ ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
 
 # GPT 客户端
 gpt_client:
-  max_request_bytes: 47185920      # 最大请求字节数 (45MB)
+  token_limit: 128000             # 模型上下文窗口限制
   retry_attempts: 3                # 重试次数
   retry_backoff_seconds: 1.5       # 重试退避秒数
 """
@@ -90,7 +90,7 @@ ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
 
 # GPT 客户端
 gpt_client:
-  max_request_bytes: 47185920      # 最大请求字节数 (45MB)
+  token_limit: 128000             # 模型上下文窗口限制
   retry_attempts: 3                # 重试次数
   retry_backoff_seconds: 1.5       # 重试退避秒数
 """
@@ -169,6 +169,25 @@ def _load_transcriber_defaults() -> dict:
         return {}
 
 
+def _get_dev_config_json_path() -> Path:
+    """获取 dev_config.json 路径"""
+    base_dir = Path(__file__).parent.parent
+    return base_dir / "config" / "dev_config.json"
+
+
+def _load_dev_config_defaults() -> dict:
+    """加载 dev_config.json 作为开发者默认配置"""
+    path = _get_dev_config_json_path()
+    if not path.exists():
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"加载 dev_config.json 失败: {e}")
+        return {}
+
+
 class ConfigManager:
     """YAML 配置管理器，单例模式"""
 
@@ -185,13 +204,16 @@ class ConfigManager:
         return cls._instance
 
     def _load(self) -> dict:
-        """加载配置文件，与默认配置合并（优先级：config.yaml > transcriber.json > 代码默认值）"""
+        """加载配置文件，与默认配置合并（优先级：config.yaml > dev_config.json > transcriber.json > 代码默认值）"""
         # 1. 代码默认配置
         defaults = _load_default_config()
         # 2. transcriber.json 覆盖
         transcriber_defaults = _load_transcriber_defaults()
         defaults = _deep_merge(defaults, transcriber_defaults)
-        # 3. 用户 config.yaml 覆盖
+        # 3. dev_config.json 开发者配置覆盖
+        dev_defaults = _load_dev_config_defaults()
+        defaults = _deep_merge(defaults, dev_defaults)
+        # 4. 用户 config.yaml 覆盖
         if not self._config_path.exists():
             return defaults
         try:
