@@ -388,7 +388,7 @@ class NoteGenerator:
         :param audio_cache_file: 本地缓存 JSON 文件路径
         :param status_phase: 对应的状态枚举，如 TaskStatus.DOWNLOADING
         :param platform: 平台标识
-        :param output_path: 下载输出目录（可为 None）
+        :param output_path: 笔记输出文件路径（可为 None）
         :param screenshot: 是否需要在笔记中插入截图
         :param video_understanding: 是否需要生成缩略图
         :param video_interval: 视频截帧间隔
@@ -397,6 +397,9 @@ class NoteGenerator:
         """
         task_id = audio_cache_file.stem.split("_")[0]
         self._update_status(task_id, status_phase)
+
+        # output_path 是笔记文件路径，提取其所在目录供下载器使用
+        download_dir = Path(output_path).parent if output_path else None
 
         # 已有缓存，尝试加载
         if audio_cache_file.exists():
@@ -414,7 +417,7 @@ class NoteGenerator:
                 audio = downloader.download(
                     video_url=video_url,
                     quality=quality,
-                    output_dir=output_path,
+                    output_dir=str(download_dir) if download_dir else None,
                     need_video=False,
                     skip_download=True,
                 )
@@ -462,7 +465,7 @@ class NoteGenerator:
             audio = downloader.download(
                 video_url=video_url,
                 quality=quality,
-                output_dir=output_path,
+                output_dir=str(download_dir) if download_dir else None,
                 need_video=need_video,
             )
             audio_cache_file.write_text(json.dumps(asdict(audio), ensure_ascii=False, indent=2), encoding="utf-8")
