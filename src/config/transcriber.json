@@ -1,0 +1,34 @@
+{
+  "default_transcriber": "mlx-whisper",
+  "fallback_priority": ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper"],
+  "transcribers": {
+    "fast-whisper": {
+      "enabled": true,
+      "model_size": "base",
+      "device": "cuda",
+      "description": "本地 Whisper 转写"
+    },
+    "mlx-whisper": {
+      "enabled": true,
+      "model_size": "base",
+      "description": "Apple Silicon 专用 Whisper（macOS  only）"
+    },
+    "groq": {
+      "enabled": true,
+      "api_key_env": "GROQ_API_KEY",
+      "base_url": "https://api.groq.com/openai/v1",
+      "model": "whisper-large-v3",
+      "description": "在线转写（推荐，无需 GPU）"
+    },
+    "bcut": {
+      "enabled": true,
+      "api_base": "https://member.bilibili.com/x/bcut/rubick-interface",
+      "description": "B站必剪在线转写"
+    },
+    "kuaishou": {
+      "enabled": true,
+      "api_url": "https://ai.kuaishou.com/api/effects/subtitle_generate",
+      "description": "快手在线转写"
+    }
+  }
+}

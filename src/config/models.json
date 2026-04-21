@@ -1,0 +1,84 @@
+{
+  "models": {
+    "gpt-4o": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "model_name": "gpt-4o"
+    },
+    "gpt-4": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "model_name": "gpt-4"
+    },
+    "gpt-4-turbo": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "model_name": "gpt-4-turbo"
+    },
+    "gpt-3.5-turbo": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "model_name": "gpt-3.5-turbo"
+    },
+    "gpt-4o-mini": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "model_name": "gpt-4o-mini"
+    },
+    "deepseek-chat": {
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "base_url": "https://api.deepseek.com",
+      "model_name": "deepseek-chat"
+    },
+    "deepseek-coder": {
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "base_url": "https://api.deepseek.com",
+      "model_name": "deepseek-coder"
+    },
+    "qwen-turbo": {
+      "api_key_env": "QWEN_API_KEY",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model_name": "qwen-turbo"
+    },
+    "qwen-plus": {
+      "api_key_env": "QWEN_API_KEY",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model_name": "qwen-plus"
+    },
+    "qwen-max": {
+      "api_key_env": "QWEN_API_KEY",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model_name": "qwen-max"
+    },
+    "qwen-vl-max": {
+      "api_key_env": "QWEN_API_KEY",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model_name": "qwen-vl-max"
+    },
+    "claude-3-opus": {
+      "api_key_env": "CLAUDE_API_KEY",
+      "base_url": "https://",
+      "model_name": "claude-3-opus"
+    },
+    "claude-3-sonnet": {
+      "api_key_env": "CLAUDE_API_KEY",
+      "base_url": "https://",
+      "model_name": "claude-3-sonnet"
+    },
+    "gemini-pro": {
+      "api_key_env": "GEMINI_API_KEY",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "model_name": "gemini-pro"
+    },
+    "llama-3-70b": {
+      "api_key_env": "GROQ_API_KEY",
+      "base_url": "https://api.groq.com/openai/v1",
+      "model_name": "llama-3-70b-8192"
+    },
+    "ollama-llama3": {
+      "api_key_env": "OLLAMA_API_KEY",
+      "base_url": "http://127.0.0.1:11434/v1",
+      "model_name": "llama3"
+    }
+  }
+}
