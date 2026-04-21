@@ -104,8 +104,8 @@ bilinote model-set-default deepseek  # 设置默认模型
 
 ## 目录结构
 
-```
-~/.bilinote/
+```bash
+~/.bilinote/ #windows： C:\Users\<user_name>\.bilinote\
 ├── data/
 │   ├── downloads/     # 下载的音频
 │   ├── cache/         # 转写缓存
