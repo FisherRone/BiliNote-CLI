@@ -1,0 +1,35 @@
+{
+  "skill_name": "bilinote-agent-helper",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "用户发送了一个B站视频链接：https://www.bilibili.com/video/BV1mQ9jBcEf4，说'帮我记一下笔记，要学术风格的'。",
+      "expected_output": "Agent 应该：1) 检查 bilinote 是否已安装；2) 确认配置；3) 调用 bilinote process 生成笔记；4) 读取生成的 markdown 文件；5) 将结果整理后发给用户",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "用户说：'我想在B站上了解一下Python异步编程，帮我找几个视频整理一下'。",
+      "expected_output": "Agent 应该：1) 使用 bilinote search 搜索相关视频；2) 分析搜索结果选择最相关的1-3个视频；3) 调用 bilinote process 批量生成笔记；4) 整合所有笔记内容发给用户",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "用户发了两个视频链接：'https://www.bilibili.com/video/BV1xx' 和 'https://www.bilibili.com/video/BV2yy'，说'这两个都帮我总结一下，要口语化一点的'。",
+      "expected_output": "Agent 应该：1) 识别到两个链接；2) 调用 bilinote process 批量处理（两个URL同时传入）；3) 读取生成的两个markdown文件；4) 分别整理要点发给用户",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "用户说：'我本地有一个 video.mp4，帮我生成一份带截图的详细笔记'。",
+      "expected_output": "Agent 应该：1) 识别本地视频路径；2) 调用 bilinote process ./video.mp4 --screenshot；3) 读取结果并发给用户",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "用户说：'这个 YouTube 视频 https://youtube.com/watch?v=dQw4w9WgXcQ 讲的是什么，帮我总结一下'。",
+      "expected_output": "Agent 应该：1) 识别 YouTube 链接；2) 调用 bilinote process 处理；3) 即使不是B站视频也要使用工具处理；4) 读取并总结内容发给用户",
+      "files": []
+    }
+  ]
+}
