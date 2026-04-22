@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.services.note import NoteGenerator
-from app.services.batch_processor import BatchProcessor
+from app.services.batch_processor import BatchProcessor, AsyncBatchProcessor
 from app.enmus.note_enums import DownloadQuality
 from app.utils.url_parser import extract_video_id, detect_platform
 from app.utils.path_helper import get_path_manager
@@ -297,7 +297,7 @@ def _process_single(video_url: str, args, quality_map: dict):
 
 
 def _process_batch(video_urls: list, args, quality_map: dict):
-    """批量处理视频"""
+    """批量处理视频（异步并行 AI 阶段）"""
     print(f"批量处理 {len(video_urls)} 个视频...")
     print(f"使用模型: {args.model}")
     
@@ -316,19 +316,18 @@ def _process_batch(video_urls: list, args, quality_map: dict):
         print("没有有效的视频链接")
         sys.exit(1)
     
-    # 创建批量处理器
-    batch_processor = BatchProcessor(output_dir=args.output_dir)
+    # 创建异步批量处理器
+    batch_processor = AsyncBatchProcessor(output_dir=args.output_dir)
     note_generator = NoteGenerator()
     
-    def process_func(url: str, platform: str, task_id: str, output_path: str) -> bool:
-        """单个任务处理函数"""
+    def prepare_func(url: str, platform: str, task_id: str, output_path: str):
+        """同步准备阶段：下载、转写"""
         try:
-            result = note_generator.generate(
+            return note_generator.prepare(
                 video_url=url,
                 platform=platform,
                 quality=quality_map[args.quality],
                 task_id=task_id,
-                model_name=args.model,
                 link=args.link,
                 screenshot=args.screenshot,
                 _format=args.format,
@@ -339,18 +338,22 @@ def _process_batch(video_urls: list, args, quality_map: dict):
                 video_interval=args.video_interval,
                 grid_size=args.grid_size,
             )
-            
-            if result and result.markdown:
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(result.markdown)
-                return True
-            return False
         except Exception as e:
-            print(f"  ✗ 错误: {e}")
+            print(f"  ✗ 准备错误: {e}")
+            return None
+    
+    def ai_func(prepared) -> bool:
+        """异步 AI 阶段：每个 worker 线程使用独立 NoteGenerator 实例"""
+        try:
+            worker = NoteGenerator()
+            result = worker.summarize_and_save(prepared, model_name=args.model)
+            return result is not None and result.markdown
+        except Exception as e:
+            print(f"  ✗ AI 错误: {e}")
             return False
     
-    # 执行批量处理
-    success_count, fail_count = batch_processor.process(items, process_func)
+    # 执行异步批量处理
+    success_count, fail_count = batch_processor.process(items, prepare_func, ai_func)
     
     if fail_count > 0:
         sys.exit(1)
