@@ -18,9 +18,9 @@ models:
     base_url: "http://127.0.0.1:11434/v1"
 
 # 转写器配置
-# 可用转写器类型（按优先级排序）: groq, bcut, kuaishou, fast-whisper, mlx-whisper, whisper-cpp
+# 可用转写器类型（按优先级排序）: bcut, kuaishou, whisper-cpp, groq
 transcriber:
-  default_type: "{default_transcriber}" # 默认转写器类型 (macOS 推荐使用 mlx-whisper)
+  default_type: "bcut" # 默认转写器类型
   whisper_model_size: "base"       # whisper 模型大小
   groq_model: "whisper-large-v3"   # Groq 转写模型
   whisper-cpp:

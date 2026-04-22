@@ -18,7 +18,7 @@ AI 视频笔记生成工具 - 让 AI 为你的视频做笔记
 ## 功能
 
 - 多平台支持：Bilibili、YouTube、抖音、快手、本地视频
-- 本地音频转写：基于 faster-whisper 或 MLX-whisper
+- 本地音频转写：基于 whisper-cpp
 - AI 笔记生成：支持 DeepSeek、OpenAI、Qwen 等
 - 智能缓存：转写结果和笔记自动缓存
 - 截图插入、视频跳转链接、多模态理解
@@ -52,7 +52,7 @@ bilinote config list
 非敏感配置在 `~/.bilinote/config.yaml`：
 ```yaml
 transcriber:
-  default_type: "fast-whisper" # 默认音频转写器
+  default_type: "bcut" # 默认音频转写器
   whisper_model_size: "base"
 ```
 
@@ -109,11 +109,73 @@ bilinote model-set-default deepseek  # 设置默认模型
 ├── data/
 │   ├── downloads/     # 下载的音频
 │   ├── cache/         # 转写缓存
-│   ├── output/notes/  # 生成的笔记
+│   ├── output/notes/  # 生成的笔记★
 │   └── state/         # 任务状态
-├── config.yaml        # 用户配置
+├── config.yaml        # 用户配置★
 └── logs/
 ```
+
+## 【指南】配置 whisper-cpp 作为本地音频转写器
+
+### macOS 安装 whisper.cpp 指南
+
+#### 1. 安装 whisper-cpp
+```bash
+brew install whisper-cpp
+```
+#### 2. 下载模型
+```bash
+# 创建目录并进入
+mkdir -p ~/whisper-models && cd ~/whisper-models
+# 下载模型（以 base 模型为例）
+curl -L -o ggml-base.bin 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin?download=true'
+```
+- 或：到 [huggingface 网站](https://huggingface.co/ggerganov/whisper.cpp/tree/main) 下载 whisper 模型。手动移动到模型存储目录。
+- ⚠️ **注意**：如果你选择把模型放入其他目录，那么需在 `config.yaml` 内修改模型地址。
+
+### Windows 安装 whisper.cpp 指南
+
+#### 1. 下载程序
+
+- 访问 [whisper.cpp Github Releases 页面](https://github.com/ggerganov/whisper.cpp/releases)
+- 下载软件压缩包：
+	- CPU 版：`whisper-bin-x64.zip`
+	- NVIDIA 显卡加速版：`whisper-cublas-12.4.0-bin-x64.zip`
+- 解压到固定目录，如 `D:\ProgramFiles\whispercpp`
+
+#### 2. 下载模型
+
+- 访问 [Huggingface 模型页面](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
+- 下载 `ggml-base.bin`（或其他模型）
+- 建议放入 `D:\ProgramFiles\whispercpp\models\`
+
+#### 3. 添加到 PATH
+
+以**管理员**身份打开命令提示符，执行：
+```cmd
+setx /M PATH "D:\ProgramFiles\whispercpp;%PATH%"
+```
+
+- ⚠️ **注意**：上面的 `D:\ProgramFiles\whispercpp` 需替换为 `whisper-cli.exe` 所在的目录。
+- **重启命令提示符**后生效。  
+- 验证是否安装成功：`whisper-cli --help`
+- 如果安装遇到问题，建议手动在系统环境变量中添加。
+
+### 配置 whisper-cpp（macOS / Windows 通用）
+
+在 `config.yaml` 中填写模型文件（如`ggml-base.bin`）的路径：
+
+```yaml
+
+transcriber:
+  default_type: "whisper-cpp"
+  whisper-cpp:
+    model_path: "D:/ProgramFiles/whispercpp/models/ggml-base.bin"  # Win
+    # model_path: "~/whisper-models/ggml-base.bin"                 # macOS
+```
+
+- ⚠️ **注意**：地址应该使用 `/` 而不是 `\`
+- ⚠️ **注意**：如果模型放在其他位置，`model_path` 需相应修改。
 
 ## License
 

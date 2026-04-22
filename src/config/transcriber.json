@@ -1,18 +1,7 @@
 {
-  "default_transcriber": "mlx-whisper",
-  "fallback_priority": ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper"],
+  "default_transcriber": "bcut",
+  "fallback_priority": ["bcut", "kuaishou","whisper-cpp","groq"],
   "transcribers": {
-    "fast-whisper": {
-      "enabled": true,
-      "model_size": "base",
-      "device": "cuda",
-      "description": "本地 Whisper 转写"
-    },
-    "mlx-whisper": {
-      "enabled": true,
-      "model_size": "base",
-      "description": "Apple Silicon 专用 Whisper（macOS  only）"
-    },
     "groq": {
       "enabled": true,
       "api_key_env": "GROQ_API_KEY",

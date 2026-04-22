@@ -14,10 +14,6 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-# 转写器类型列表（用于注释说明）
-_TRANSCRIBER_TYPES = ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper", "whisper-cpp"]
-
-
 def _get_config_example_path() -> Path:
     """获取 config.yaml.example 模板文件路径"""
     # 从当前文件位置推导: app/config_manager.py -> src/config/config.yaml.example
@@ -33,22 +29,16 @@ def _get_default_config() -> str:
 
     template = example_path.read_text(encoding="utf-8")
 
-    # 根据操作系统确定占位符值
-    system = platform.system()
-    if system == "Darwin":  # macOS
-        default_transcriber = "mlx-whisper"
-    else:
-        default_transcriber = "fast-whisper"
+    
 
     # macOS 默认 whisper 模型路径
-    if system == "Darwin":
+    if platform.system() == "Darwin":
         default_whisper_model_path = str(Path.home() / "whisper-models" / "ggml-base.bin")
     else:
         default_whisper_model_path = ""
 
     # 填充占位符
     return template.format(
-        default_transcriber=default_transcriber,
         default_whisper_model_path=default_whisper_model_path,
         example_whisper_model_path="~/whisper-models/ggml-base.bin",
     )
@@ -252,13 +242,7 @@ class ConfigManager:
         transcriber_config = config.get("transcribers", {}).get(transcriber_type, {})
         
         # 环境变量覆盖 → config.yaml 覆盖
-        if transcriber_type == "fast-whisper":
-            transcriber_config["model_size"] = self.get(
-                "transcriber.whisper_model_size",
-                transcriber_config.get("model_size", "base")
-            )
-            transcriber_config["device"] = transcriber_config.get("device", "cpu")
-        elif transcriber_type == "groq":
+        if transcriber_type == "groq":
             from app.secret_manager import get_secret
             transcriber_config["api_key"] = get_secret("GROQ_API_KEY") or transcriber_config.get("api_key")
             transcriber_config["base_url"] = self.get(
@@ -268,11 +252,6 @@ class ConfigManager:
             transcriber_config["model"] = self.get(
                 "transcriber.groq_model",
                 transcriber_config.get("model")
-            )
-        elif transcriber_type == "mlx-whisper":
-            transcriber_config["model_size"] = self.get(
-                "transcriber.whisper_model_size",
-                transcriber_config.get("model_size", "base")
             )
         elif transcriber_type == "whisper-cpp":
             cli_path = self.get(
@@ -291,11 +270,11 @@ class ConfigManager:
     def get_fallback_priority(self) -> List[str]:
         """获取 fallback 优先级列表"""
         config = self.get_config()
-        return config.get("fallback_priority", ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper"])
+        return config.get("fallback_priority", ["bcut", "kuaishou","whisper-cpp","groq"])
 
     def get_default_transcriber(self) -> str:
         """获取默认转写器类型"""
-        return self.get("transcriber.default_type", "fast-whisper")
+        return self.get("transcriber.default_type", "bcut")
 
     def is_transcriber_enabled(self, transcriber_type: str) -> bool:
         """检查转写器是否启用"""

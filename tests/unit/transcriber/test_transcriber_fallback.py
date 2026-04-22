@@ -23,14 +23,14 @@ class TestFallbackOrder(unittest.TestCase):
     def test_default_fallback_order(self):
         """测试默认 fallback 顺序（从 transcriber.json 读取）"""
         with patch('app.transcriber.transcriber_provider.config_manager') as mock_cm:
-            mock_cm.get_fallback_priority.return_value = ["groq", "bcut", "kuaishou", "fast-whisper"]
+            mock_cm.get_fallback_priority.return_value = ["bcut", "kuaishou", "whisper-cpp","groq"]
             mock_cm.get.return_value = None  # 无用户首选配置
             
             order = _get_fallback_order()
             
             self.assertEqual(len(order), 4)
-            self.assertEqual(order[0], TranscriberType.GROQ)
-            self.assertEqual(order[1], TranscriberType.BCUT)
+            self.assertEqual(order[0], TranscriberType.BCUT)
+            self.assertEqual(order[1], TranscriberType.KUAISHOU)
     
     def test_preferred_type_first(self):
         """测试用户首选转写器被置顶"""

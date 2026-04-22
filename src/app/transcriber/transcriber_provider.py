@@ -4,28 +4,23 @@ from typing import List, Set
 
 from app.transcriber.base import Transcriber
 from app.transcriber.groq import GroqTranscriber
-from app.transcriber.whisper import WhisperTranscriber
 from app.transcriber.bcut import BcutTranscriber
 from app.transcriber.kuaishou import KuaishouTranscriber
 from app.transcriber.whisper_cpp import WhisperCppTranscriber
 from app.config_manager import get_config_manager
 from app.utils.logger import get_logger
 from app.models.transcriber_model import TranscriptResult
-from app.utils.env_checker import is_cuda_available
 
 config_manager = get_config_manager()
 logger = get_logger(__name__)
 
 class TranscriberType(str, Enum):
-    FAST_WHISPER = "fast-whisper"
-    MLX_WHISPER = "mlx-whisper"
     BCUT = "bcut"
     KUAISHOU = "kuaishou"
     GROQ = "groq"
     WHISPER_CPP = "whisper-cpp"
 
 TRANSCRIBER_CLASSES = {
-    TranscriberType.FAST_WHISPER: WhisperTranscriber,
     TranscriberType.BCUT: BcutTranscriber,
     TranscriberType.KUAISHOU: KuaishouTranscriber,
     TranscriberType.GROQ: GroqTranscriber,
@@ -34,20 +29,11 @@ TRANSCRIBER_CLASSES = {
 
 UNAVAILABLE_TRANSCRIBERS: Set[TranscriberType] = set()
 
-try:
-    from app.transcriber.mlx_whisper import MLXWhisperTranscriber
-    TRANSCRIBER_CLASSES[TranscriberType.MLX_WHISPER] = MLXWhisperTranscriber
-    logger.info("MLX Whisper 可用，已导入")
-except ImportError:
-    UNAVAILABLE_TRANSCRIBERS.add(TranscriberType.MLX_WHISPER)
-    logger.warning("MLX Whisper 导入失败")
 
 logger.info('初始化转录服务提供器')
 
 # 转录器单例缓存
 _transcribers = {
-    TranscriberType.FAST_WHISPER: None,
-    TranscriberType.MLX_WHISPER: None,
     TranscriberType.BCUT: None,
     TranscriberType.KUAISHOU: None,
     TranscriberType.GROQ: None,
@@ -80,13 +66,6 @@ def get_transcriber(transcriber_type: TranscriberType):
     
     # 构建参数
     kwargs = {}
-    if transcriber_type in (TranscriberType.FAST_WHISPER, TranscriberType.MLX_WHISPER):
-        kwargs["model_size"] = config.get("model_size", "base")
-        if transcriber_type == TranscriberType.FAST_WHISPER:
-            kwargs["device"] = config.get("device", "cpu")
-            if kwargs["device"] == "cuda" and not is_cuda_available():
-                logger.warning("CUDA 不可用，自动回退到 CPU 模式")
-                kwargs["device"] = "cpu"
     
     return _init_transcriber(transcriber_type, **kwargs)
 
