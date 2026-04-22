@@ -7,6 +7,7 @@ from app.transcriber.groq import GroqTranscriber
 from app.transcriber.whisper import WhisperTranscriber
 from app.transcriber.bcut import BcutTranscriber
 from app.transcriber.kuaishou import KuaishouTranscriber
+from app.transcriber.whisper_cpp import WhisperCppTranscriber
 from app.config_manager import get_config_manager
 from app.utils.logger import get_logger
 from app.models.transcriber_model import TranscriptResult
@@ -21,12 +22,14 @@ class TranscriberType(str, Enum):
     BCUT = "bcut"
     KUAISHOU = "kuaishou"
     GROQ = "groq"
+    WHISPER_CPP = "whisper-cpp"
 
 TRANSCRIBER_CLASSES = {
     TranscriberType.FAST_WHISPER: WhisperTranscriber,
     TranscriberType.BCUT: BcutTranscriber,
     TranscriberType.KUAISHOU: KuaishouTranscriber,
     TranscriberType.GROQ: GroqTranscriber,
+    TranscriberType.WHISPER_CPP: WhisperCppTranscriber,
 }
 
 UNAVAILABLE_TRANSCRIBERS: Set[TranscriberType] = set()
@@ -48,6 +51,7 @@ _transcribers = {
     TranscriberType.BCUT: None,
     TranscriberType.KUAISHOU: None,
     TranscriberType.GROQ: None,
+    TranscriberType.WHISPER_CPP: None,
 }
 
 # 公共实例初始化函数

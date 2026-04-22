@@ -63,3 +63,10 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+## 5. Project-associated Notes
+
+### 运行临时 Python 代码
+```bash
+uv run python -c "print('import yt_dlp;Hello from uv')"
+```

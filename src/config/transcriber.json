@@ -29,6 +29,12 @@
       "enabled": true,
       "api_url": "https://ai.kuaishou.com/api/effects/subtitle_generate",
       "description": "快手在线转写"
+    },
+    "whisper-cpp": {
+      "enabled": true,
+      "cli_path": "whisper-cli",
+      "model_path": "",
+      "description": "whisper.cpp 本地转写（通过 whisper-cli）"
     }
   }
 }

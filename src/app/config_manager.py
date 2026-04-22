@@ -15,7 +15,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 # 转写器类型列表（用于注释说明）
-_TRANSCRIBER_TYPES = ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper"]
+_TRANSCRIBER_TYPES = ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper", "whisper-cpp"]
 
 # macOS 默认配置内容
 _DEFAULT_CONFIG_MACOS = """\
@@ -39,12 +39,16 @@ models:
     base_url: "http://127.0.0.1:11434/v1"
 
 # 转写器配置
-# 可用转写器类型（按优先级排序）: groq, bcut, kuaishou, fast-whisper, mlx-whisper
+# 可用转写器类型（按优先级排序）: groq, bcut, kuaishou, fast-whisper, mlx-whisper, whisper-cpp
 transcriber:
   default_type: "mlx-whisper"      # 默认转写器类型 (macOS 推荐使用 mlx-whisper)
   whisper_model_size: "base"       # whisper 模型大小
   groq_model: "whisper-large-v3"   # Groq 转写模型
-  
+
+# whisper.cpp 配置（仅在 default_type 为 whisper-cpp 时生效）
+# whisper-cpp:
+#   cli_path: "whisper-cli"         # whisper-cli 可执行文件路径
+#   model_path: ""                  # ggml 模型文件路径，如 ~/whisper-models/ggml-base.bin
 
 # FFmpeg
 ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
@@ -78,12 +82,16 @@ models:
     base_url: "http://127.0.0.1:11434/v1"
 
 # 转写器配置
-# 可用转写器类型: groq, bcut, kuaishou, fast-whisper（本地）, mlx-whisper（本地）
+# 可用转写器类型: groq, bcut, kuaishou, fast-whisper（本地）, mlx-whisper（本地）, whisper-cpp（本地）
 transcriber:
   default_type: "fast-whisper"     # 默认转写器类型
   whisper_model_size: "base"       # whisper 模型大小
   groq_model: "whisper-large-v3"   # Groq 转写模型
-  
+
+# whisper.cpp 配置（仅在 default_type 为 whisper-cpp 时生效）
+# whisper-cpp:
+#   cli_path: "whisper-cli"         # whisper-cli 可执行文件路径
+#   model_path: ""                  # ggml 模型文件路径，如 ~/whisper-models/ggml-base.bin
 
 # FFmpeg
 ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
@@ -324,7 +332,16 @@ class ConfigManager:
                 "transcriber.whisper_model_size",
                 transcriber_config.get("model_size", "base")
             )
-        
+        elif transcriber_type == "whisper-cpp":
+            transcriber_config["cli_path"] = self.get(
+                "transcriber.whisper-cpp.cli_path",
+                transcriber_config.get("cli_path", "whisper-cli")
+            )
+            transcriber_config["model_path"] = self.get(
+                "transcriber.whisper-cpp.model_path",
+                transcriber_config.get("model_path", "")
+            )
+
         return transcriber_config
 
     def get_fallback_priority(self) -> List[str]:
