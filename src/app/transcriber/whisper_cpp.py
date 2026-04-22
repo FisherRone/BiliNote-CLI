@@ -37,7 +37,8 @@ class WhisperCppTranscriber(Transcriber):
                 f"或通过配置指定路径: transcriber.whisper-cpp.cli_path"
             )
 
-        # 检查模型路径
+        # 检查模型路径（展开 ~ 为用户主目录）
+        self.model_path = os.path.expanduser(self.model_path)
         if not self.model_path or not Path(self.model_path).exists():
             raise RuntimeError(
                 f"未找到 Whisper 模型文件: {self.model_path or '未配置'}\n"

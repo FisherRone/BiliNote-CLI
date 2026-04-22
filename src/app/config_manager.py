@@ -17,99 +17,41 @@ logger = logging.getLogger(__name__)
 # 转写器类型列表（用于注释说明）
 _TRANSCRIBER_TYPES = ["groq", "bcut", "kuaishou", "fast-whisper", "mlx-whisper", "whisper-cpp"]
 
-# macOS 默认配置内容
-_DEFAULT_CONFIG_MACOS = """\
-# BiliNote CLI 配置文件
-# 修改后无需重启，下次运行时自动生效
 
-# AI 模型 API 配置（API Key 请使用 bilinote config set 命令设置）
-models:
-  default_model: "deepseek-chat"    # 默认模型
-  openai:
-    base_url: "https://api.openai.com/v1"
-  deepseek:
-    base_url: "https://api.deepseek.com"
-  groq:
-    base_url: "https://api.groq.com/openai/v1"
-  qwen:
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-  gemini:
-    base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
-  ollama:
-    base_url: "http://127.0.0.1:11434/v1"
-
-# 转写器配置
-# 可用转写器类型（按优先级排序）: groq, bcut, kuaishou, fast-whisper, mlx-whisper, whisper-cpp
-transcriber:
-  default_type: "mlx-whisper"      # 默认转写器类型 (macOS 推荐使用 mlx-whisper)
-  whisper_model_size: "base"       # whisper 模型大小
-  groq_model: "whisper-large-v3"   # Groq 转写模型
-
-# whisper.cpp 配置（仅在 default_type 为 whisper-cpp 时生效）
-# whisper-cpp:
-#   cli_path: "whisper-cli"         # whisper-cli 可执行文件路径
-#   model_path: ""                  # ggml 模型文件路径，如 ~/whisper-models/ggml-base.bin
-
-# FFmpeg
-ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
-
-# GPT 客户端
-gpt_client:
-  token_limit: 128000             # 模型上下文窗口限制
-  retry_attempts: 3                # 重试次数
-  retry_backoff_seconds: 1.5       # 重试退避秒数
-"""
-
-# Windows/Linux 默认配置内容
-_DEFAULT_CONFIG_OTHER = """\
-# BiliNote CLI 配置文件
-# 修改后无需重启，下次运行时自动生效
-
-# AI 模型 API 配置（API Key 请使用 bilinote config set 命令设置）
-models:
-  default_model: "deepseek-chat"    # 默认模型
-  openai:
-    base_url: "https://api.openai.com/v1"
-  deepseek:
-    base_url: "https://api.deepseek.com"
-  groq:
-    base_url: "https://api.groq.com/openai/v1"
-  qwen:
-    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-  gemini:
-    base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
-  ollama:
-    base_url: "http://127.0.0.1:11434/v1"
-
-# 转写器配置
-# 可用转写器类型: groq, bcut, kuaishou, fast-whisper（本地）, mlx-whisper（本地）, whisper-cpp（本地）
-transcriber:
-  default_type: "fast-whisper"     # 默认转写器类型
-  whisper_model_size: "base"       # whisper 模型大小
-  groq_model: "whisper-large-v3"   # Groq 转写模型
-
-# whisper.cpp 配置（仅在 default_type 为 whisper-cpp 时生效）
-# whisper-cpp:
-#   cli_path: "whisper-cli"         # whisper-cli 可执行文件路径
-#   model_path: ""                  # ggml 模型文件路径，如 ~/whisper-models/ggml-base.bin
-
-# FFmpeg
-ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
-
-# GPT 客户端
-gpt_client:
-  token_limit: 128000             # 模型上下文窗口限制
-  retry_attempts: 3                # 重试次数
-  retry_backoff_seconds: 1.5       # 重试退避秒数
-"""
+def _get_config_example_path() -> Path:
+    """获取 config.yaml.example 模板文件路径"""
+    # 从当前文件位置推导: app/config_manager.py -> src/config/config.yaml.example
+    base_dir = Path(__file__).parent.parent
+    return base_dir / "config" / "config.yaml.example"
 
 
 def _get_default_config() -> str:
-    """根据操作系统返回默认配置内容"""
+    """根据操作系统读取配置模板并填充占位符"""
+    example_path = _get_config_example_path()
+    if not example_path.exists():
+        raise FileNotFoundError(f"配置文件模板不存在: {example_path}")
+
+    template = example_path.read_text(encoding="utf-8")
+
+    # 根据操作系统确定占位符值
     system = platform.system()
     if system == "Darwin":  # macOS
-        return _DEFAULT_CONFIG_MACOS
-    return _DEFAULT_CONFIG_OTHER  # Windows, Linux, etc.
+        default_transcriber = "mlx-whisper"
+    else:
+        default_transcriber = "fast-whisper"
+
+    # macOS 默认 whisper 模型路径
+    if system == "Darwin":
+        default_whisper_model_path = str(Path.home() / "whisper-models" / "ggml-base.bin")
+    else:
+        default_whisper_model_path = ""
+
+    # 填充占位符
+    return template.format(
+        default_transcriber=default_transcriber,
+        default_whisper_model_path=default_whisper_model_path,
+        example_whisper_model_path="~/whisper-models/ggml-base.bin",
+    )
 
 
 def _get_config_path() -> Path:
@@ -333,10 +275,12 @@ class ConfigManager:
                 transcriber_config.get("model_size", "base")
             )
         elif transcriber_type == "whisper-cpp":
-            transcriber_config["cli_path"] = self.get(
+            cli_path = self.get(
                 "transcriber.whisper-cpp.cli_path",
                 transcriber_config.get("cli_path", "whisper-cli")
             )
+            # cli_path 为空字符串时回退到 whisper-cli
+            transcriber_config["cli_path"] = cli_path or "whisper-cli"
             transcriber_config["model_path"] = self.get(
                 "transcriber.whisper-cpp.model_path",
                 transcriber_config.get("model_path", "")

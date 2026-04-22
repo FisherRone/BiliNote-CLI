@@ -1,0 +1,37 @@
+# BiliNote CLI 配置文件
+# 修改后无需重启，下次运行时自动生效
+
+# AI 模型 API 配置（API Key 请使用 bilinote config set 命令设置）
+models:
+  default_model: "deepseek-chat"    # 默认模型
+  openai:
+    base_url: "https://api.openai.com/v1"
+  deepseek:
+    base_url: "https://api.deepseek.com"
+  groq:
+    base_url: "https://api.groq.com/openai/v1"
+  qwen:
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  gemini:
+    base_url: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  ollama:
+    base_url: "http://127.0.0.1:11434/v1"
+
+# 转写器配置
+# 可用转写器类型（按优先级排序）: groq, bcut, kuaishou, fast-whisper, mlx-whisper, whisper-cpp
+transcriber:
+  default_type: "{default_transcriber}" # 默认转写器类型 (macOS 推荐使用 mlx-whisper)
+  whisper_model_size: "base"       # whisper 模型大小
+  groq_model: "whisper-large-v3"   # Groq 转写模型
+  whisper-cpp:
+    cli_path: ""         # whisper-cli 可执行文件路径（系统 PATH 里有 whisper-cli 时无需填写）
+    model_path: "{default_whisper_model_path}"       # ggml 模型文件路径，如 {example_whisper_model_path}
+
+# FFmpeg
+ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
+
+# GPT 客户端
+gpt_client:
+  token_limit: 128000             # 模型上下文窗口限制
+  retry_attempts: 3                # 重试次数
+  retry_backoff_seconds: 1.5       # 重试退避秒数
