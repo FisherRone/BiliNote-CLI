@@ -166,8 +166,11 @@ class TaskPreparer:
         # 已有音频缓存，尝试加载
         if task_id:
             cached = TaskCache.load_audio_meta(task_id)
-            if cached:
+            if cached and Path(cached.file_path).exists():
+                logger.info(f"使用已缓存的音频文件: {cached.file_path}")
                 return cached
+            if cached:
+                logger.warning(f"缓存的音频文件已不存在，将重新下载: {cached.file_path}")
 
         # 有字幕且不需要截图/视频理解时，只提取元信息不下载文件
         if skip_download:

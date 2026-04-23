@@ -66,6 +66,7 @@ class WhisperCppTranscriber(Transcriber):
                 self.cli_path,
                 "-m", self.model_path,
                 "-f", file_path,
+                "-l", "auto",
                 "--output-json",
                 "--output-file", output_prefix,
             ]

@@ -86,6 +86,9 @@ class BilibiliDownloader(Downloader, ABC):
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
 
+        if not os.path.exists(audio_path):
+            raise FileNotFoundError(f"音频下载失败，文件未生成: {audio_path}")
+
         return AudioDownloadResult(
             file_path=audio_path,
             title=title,
