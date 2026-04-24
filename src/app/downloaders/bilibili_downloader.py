@@ -21,13 +21,18 @@ logger = logging.getLogger(__name__)
 def _cookie_string_to_file(cookie_str: str, domain: str = ".bilibili.com") -> str:
     """将 cookie 字符串转换为 Netscape 格式的临时文件，供 yt-dlp 使用"""
     tmp_fd, tmp_path = tempfile.mkstemp(suffix=".txt", prefix="bili_cookie_")
+    # 使用一个足够远的未来时间戳作为 cookie 过期时间
+    expires = "2147483647"
     with os.fdopen(tmp_fd, 'w', encoding='utf-8') as f:
         f.write("# Netscape HTTP Cookie File\n")
         for item in cookie_str.split(';'):
             item = item.strip()
             if '=' in item:
                 name, value = item.split('=', 1)
-                f.write(f"{domain}\tTRUE\t/\tFALSE\t0\t{name.strip()}\t{value.strip()}\n")
+                name = name.strip()
+                value = value.strip()
+                if name and value:
+                    f.write(f"{domain}\tTRUE\t/\tFALSE\t{expires}\t{name}\t{value}\n")
     return tmp_path
 
 
@@ -50,7 +55,8 @@ class BilibiliDownloader(Downloader, ABC):
         video_url: str,
         output_dir: Union[str, None] = None,
         quality: DownloadQuality = "fast",
-        need_video:Optional[bool]=False
+        need_video: Optional[bool] = False,
+        skip_download: bool = False,
     ) -> AudioDownloadResult:
         if output_dir is None:
             output_dir = get_path_manager().downloads_dir
@@ -70,12 +76,19 @@ class BilibiliDownloader(Downloader, ABC):
             ],
             'noplaylist': True,
             'quiet': False,
+            'http_headers': {
+                'Referer': 'https://www.bilibili.com',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            },
         }
 
         cookie_file = _apply_bilibili_cookie(ydl_opts)
 
+        if skip_download:
+            ydl_opts['skip_download'] = True
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
+            info = ydl.extract_info(video_url, download=not skip_download)
             video_id = info.get("id")
             title = info.get("title")
             duration = info.get("duration", 0)
@@ -86,7 +99,7 @@ class BilibiliDownloader(Downloader, ABC):
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
 
-        if not os.path.exists(audio_path):
+        if not skip_download and not os.path.exists(audio_path):
             raise FileNotFoundError(f"音频下载失败，文件未生成: {audio_path}")
 
         return AudioDownloadResult(
@@ -129,6 +142,10 @@ class BilibiliDownloader(Downloader, ABC):
             'noplaylist': True,
             'quiet': False,
             'merge_output_format': 'mp4',  # 确保合并成 mp4
+            'http_headers': {
+                'Referer': 'https://www.bilibili.com',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            },
         }
 
         cookie_file = _apply_bilibili_cookie(ydl_opts)
@@ -184,6 +201,10 @@ class BilibiliDownloader(Downloader, ABC):
             'skip_download': True,
             'outtmpl': os.path.join(output_dir, f'{video_id}.%(ext)s'),
             'quiet': True,
+            'http_headers': {
+                'Referer': 'https://www.bilibili.com',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+            },
         }
 
         cookie_file = _apply_bilibili_cookie(ydl_opts)

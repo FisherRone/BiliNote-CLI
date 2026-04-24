@@ -49,12 +49,22 @@ bilinote config set BILIBILI_COOKIE "SESSDATA=xxx; ..."
 bilinote config list
 ```
 
+
 非敏感配置在 `~/.bilinote/config.yaml`：
 ```yaml
 transcriber:
   default_type: "bcut" # 默认音频转写器
   whisper_model_size: "base"
 ```
+
+### 【教程】提取 Safari Cookie
+
+1. 打开 Safari 的开发者模式。
+2. 在浏览器中打开目标网站，按 F12（或 Cmd + Opt + I）打开开发者工具。
+3. 切换到 **Network (网络)** 标签页。
+4. 刷新页面，随便找一个请求，**右键**点击该请求。
+5. 选择 **Copy** -> **Copy as cURL**。
+6. 在你的剪贴板里，你会看到一串完整的命令，其中 `-H 'cookie: ...'` 后面就是该网站的所有 Cookie。
 
 ## 使用
 

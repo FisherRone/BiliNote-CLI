@@ -47,6 +47,7 @@ class TaskPreparer:
         video_understanding: bool = False,
         video_interval: int = 0,
         grid_size: Optional[List[int]] = None,
+        no_subtitle: bool = False,
     ) -> Optional[PreparedTask]:
         if grid_size is None:
             grid_size = []
@@ -61,7 +62,7 @@ class TaskPreparer:
             # 1. 获取字幕/转写：优先缓存 → 平台字幕 → 音频转写
             transcript = TaskCache.load_transcript(task_id) if task_id else None
 
-            if transcript is None:
+            if transcript is None and not no_subtitle:
                 logger.info("尝试获取平台字幕（优先于音频下载）...")
                 try:
                     transcript = downloader.download_subtitles(video_url)
@@ -75,6 +76,8 @@ class TaskPreparer:
                 except Exception as e:
                     logger.warning(f"获取平台字幕失败: {e}，将下载音频后转写")
                     transcript = None
+            elif no_subtitle:
+                logger.info("已禁用字幕，跳过平台字幕获取，将直接下载音频并转写")
 
             # 2. 下载音频/视频
             has_transcript = transcript is not None

@@ -54,6 +54,7 @@ class NoteGenerator:
         video_understanding: bool = False,
         video_interval: int = 0,
         grid_size: Optional[List[int]] = None,
+        no_subtitle: bool = False,
     ) -> Optional[NoteResult]:
         """
         主流程：按步骤依次下载、转写、GPT 总结、截图/链接处理、存库、返回 NoteResult。
@@ -73,6 +74,7 @@ class NoteGenerator:
                 video_understanding=video_understanding,
                 video_interval=video_interval,
                 grid_size=grid_size,
+                no_subtitle=no_subtitle,
             )
             if prepared is None:
                 return None
@@ -97,6 +99,7 @@ class NoteGenerator:
         video_understanding: bool = False,
         video_interval: int = 0,
         grid_size: Optional[List[int]] = None,
+        no_subtitle: bool = False,
     ) -> Optional[PreparedTask]:
         """
         同步准备阶段：下载、转写、构建 GPTSource。
@@ -116,6 +119,7 @@ class NoteGenerator:
             video_understanding=video_understanding,
             video_interval=video_interval,
             grid_size=grid_size,
+            no_subtitle=no_subtitle,
         )
 
     def summarize_and_save(

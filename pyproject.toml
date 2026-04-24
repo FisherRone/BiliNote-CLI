@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "bilibili-api-python>=17.4.1",
+    "browser-cookie3>=0.20.1",
     "ffmpeg-python>=0.2.0",
     "gmssl>=3.2.2",
     "httpx>=0.28.1",

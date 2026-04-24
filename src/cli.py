@@ -92,6 +92,8 @@ def main():
                        help='视频帧截取间隔（秒）')
     process_parser.add_argument('--grid-size', nargs=2, type=int, default=None,
                        help='缩略图网格大小，如 3 3')
+    process_parser.add_argument('--no-subtitle', action='store_true',
+                       help='禁用平台字幕，强制下载音频并转写')
     process_parser.add_argument('--extras', default=None, help='额外参数')
     process_parser.add_argument('--output', default=None, help='输出文件路径（单任务时有效）')
     process_parser.add_argument('--output-dir', default=None, help='批量输出目录（多任务时自动创建批次目录）')
@@ -112,6 +114,8 @@ def main():
     search_parser.add_argument('--format', nargs='*', default=[], 
                        choices=['screenshot', 'link'],
                        help='笔记格式选项')
+    search_parser.add_argument('--no-subtitle', action='store_true',
+                       help='禁用平台字幕，强制下载音频并转写')
     search_parser.add_argument('--extras', default=None, help='额外参数')
     search_parser.add_argument('--output', default=None, help='输出文件路径')
     search_parser.add_argument('--output-dir', default=None, help='批量输出目录')
@@ -267,6 +271,7 @@ def _process_single(video_url: str, args, quality_map: dict):
             video_understanding=args.video_understanding,
             video_interval=args.video_interval,
             grid_size=args.grid_size,
+            no_subtitle=args.no_subtitle,
         )
         
         if result and result.markdown:
@@ -337,6 +342,7 @@ def _process_batch(video_urls: list, args, quality_map: dict):
                 video_understanding=args.video_understanding,
                 video_interval=args.video_interval,
                 grid_size=args.grid_size,
+                no_subtitle=args.no_subtitle,
             )
         except Exception as e:
             print(f"  ✗ 准备错误: {e}")
@@ -485,6 +491,7 @@ def search_videos_cli(args):
                 style=args.style,
                 extras=args.extras,
                 output_path=output_path,
+                no_subtitle=args.no_subtitle,
             )
             if result and result.markdown:
                 with open(output_path, 'w', encoding='utf-8') as f:
