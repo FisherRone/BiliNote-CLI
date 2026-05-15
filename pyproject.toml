@@ -30,10 +30,14 @@ bilinote = "src.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"BiliNote.shortcut" = "src/BiliNote.shortcut"
+
 [dependency-groups]
 dev = [
     "deptry>=0.25.1",
     "ipykernel>=7.2.0",
+    "pyinstaller>=6.20.0",
     "pytest>=9.0.3",
 ]
 

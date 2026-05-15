@@ -164,8 +164,6 @@ class TaskPreparer:
     ) -> AudioDownloadResult:
         TaskCache.update_status(task_id, TaskStatus.DOWNLOADING)
 
-        download_dir = Path(output_path).parent if output_path else None
-
         # 已有音频缓存，尝试加载
         if task_id:
             cached = TaskCache.load_audio_meta(task_id)
@@ -182,7 +180,6 @@ class TaskPreparer:
                 audio = downloader.download(
                     video_url=video_url,
                     quality=quality,
-                    output_dir=str(download_dir) if download_dir else None,
                     need_video=False,
                     skip_download=True,
                 )
@@ -227,7 +224,6 @@ class TaskPreparer:
             audio = downloader.download(
                 video_url=video_url,
                 quality=quality,
-                output_dir=str(download_dir) if download_dir else None,
                 need_video=need_video,
             )
             if task_id:
@@ -238,6 +234,7 @@ class TaskPreparer:
             TaskCache.update_status(task_id, TaskStatus.FAILED, message=str(exc))
             raise
 
+        
     def _transcribe_audio(
         self,
         audio_file: str,

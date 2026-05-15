@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import json
+import subprocess
 from pathlib import Path
 
 # 添加项目根目录到路径
@@ -16,6 +17,43 @@ from app.enmus.note_enums import DownloadQuality
 from app.utils.url_parser import extract_video_id, detect_platform
 from app.utils.path_helper import get_path_manager
 from config.model_config_manager import remove_model, list_available_models, get_model_config, get_default_model, set_default_model
+
+
+# ── macOS 快捷指令 ──────────────────────────────────────────────
+_SHORTCUT_MARKER = os.path.join(os.path.expanduser("~"), ".bilinote", ".no_shortcut_prompt")
+
+
+def _is_macos():
+    return sys.platform == "darwin"
+
+
+def _get_shortcut_path():
+    pkg_dir = Path(__file__).resolve().parent
+    # 安装后路径（wheel force-include 放入 src/）
+    in_pkg = pkg_dir / "BiliNote.shortcut"
+    if in_pkg.exists():
+        return str(in_pkg)
+    # 开发时路径（项目根目录）
+    in_root = pkg_dir.parent / "BiliNote.shortcut"
+    if in_root.exists():
+        return str(in_root)
+    return str(in_pkg)  # 默认返回，用于错误提示
+
+
+def _get_shortcut_help_text():
+    return (
+        "💡 macOS 快捷指令：从浏览器一键发送视频到 BiliNote\n"
+        "   安装: bilinote install-shortcut\n"
+        "   使用: 浏览器点击网址栏选择网址 → 菜单栏左上角 [浏览器名称] → 服务 → BiliNote"
+    )
+
+
+def _get_shortcut_process_prompt():
+    return (
+        _get_shortcut_help_text()
+        + "\n   关闭提示: bilinote shortcut-prompt-off\n"
+        "   再次查看: bilinote --help"
+    )
 
 
 def main():
@@ -154,6 +192,16 @@ def main():
     
     # config list
     config_subparsers.add_parser('list', help='列出所有已知密钥及配置状态')
+
+    # install-shortcut 子命令（仅 macOS）
+    subparsers.add_parser('install-shortcut', help='安装 macOS 快捷指令（从浏览器一键发送视频）')
+
+    # shortcut-prompt-off 子命令
+    subparsers.add_parser('shortcut-prompt-off', help='关闭快捷指令安装提示')
+
+    # macOS: 在帮助信息中添加快捷指令提示
+    if _is_macos():
+        parser.epilog += "\n" + _get_shortcut_help_text()
     
     
     args = parser.parse_args()
@@ -196,6 +244,15 @@ def main():
         config_cli(args)
         return
 
+    # 快捷指令子命令
+    if args.command == 'install-shortcut':
+        install_shortcut_cmd()
+        return
+
+    if args.command == 'shortcut-prompt-off':
+        shortcut_prompt_off_cmd()
+        return
+
 
 def process_video_cli(args):
     """处理视频生成笔记（支持批量）"""
@@ -224,10 +281,12 @@ def process_video_cli(args):
     # 单任务处理（兼容旧用法）
     if len(video_urls) == 1 and not args.output_dir:
         _process_single(video_urls[0], args, quality_map)
+        _show_shortcut_process_prompt()
         return
     
     # 批量处理
     _process_batch(video_urls, args, quality_map)
+    _show_shortcut_process_prompt()
 
 
 def _process_single(video_url: str, args, quality_map: dict):
@@ -585,6 +644,41 @@ def config_cli(args):
             print(f"  {status}  {key:25s}  {desc}")
         print(f"\n使用 bilinote config set <KEY> <VALUE> 设置密钥")
     
+
+
+def _show_shortcut_process_prompt():
+    """在 process 命令成功后显示快捷指令提示（macOS 且未关闭）"""
+    if not _is_macos():
+        return
+    if os.path.exists(_SHORTCUT_MARKER):
+        return
+    print(f"\n{_get_shortcut_process_prompt()}\n")
+
+
+def install_shortcut_cmd():
+    """安装 macOS 快捷指令"""
+    if not _is_macos():
+        print("快捷指令仅支持 macOS 系统")
+        return
+
+    shortcut_path = _get_shortcut_path()
+    if not os.path.exists(shortcut_path):
+        print(f"错误: 未找到快捷指令文件: {shortcut_path}")
+        return
+
+    print("正在打开快捷指令安装窗口...")
+    subprocess.run(["open", shortcut_path])
+    print("请在弹出的「快捷指令」App 窗口中点击「添加快捷指令」完成安装")
+    print()
+    print("安装后使用方式: 浏览器点击网址栏选择网址 → 菜单栏左上角 [浏览器名称] → 服务 → BiliNote")
+
+
+def shortcut_prompt_off_cmd():
+    """关闭快捷指令安装提示"""
+    os.makedirs(os.path.dirname(_SHORTCUT_MARKER), exist_ok=True)
+    Path(_SHORTCUT_MARKER).touch()
+    print("已关闭快捷指令安装提示")
+    print("如需再次查看: bilinote --help")
 
 
 def show_task_status(task_id: str):
