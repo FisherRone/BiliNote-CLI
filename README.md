@@ -4,7 +4,7 @@
 AI 视频笔记生成工具 - 让 AI 为你的视频做笔记
 
 > **项目说明**：本项目基于 [BiliNote](https://github.com/JefferyHcool/BiliNote) fork 并进行大量重构。  
-> 原项目采用 MIT 许可证，感谢原作者 Jeffery Huang 的杰出工作。
+> 感谢原作者 Jeffery Huang 的杰出工作。
 
 
 ## 功能
@@ -19,8 +19,7 @@ AI 视频笔记生成工具 - 让 AI 为你的视频做笔记
 
 ```bash
 # 安装 CLI
-cd BiliNote-cli
-uv tool install .
+uv tool install bilinote-cli
 
 # 安装 FFmpeg（必需）
 brew install ffmpeg  # macOS
@@ -42,7 +41,8 @@ bilinote config list
 ```
 
 
-非敏感配置在 `~/.bilinote/config.yaml`：
+其他配置在 `~/.bilinote/config.yaml`：
+- windows： `C:\Users\<user_name>\.bilinote\config.yaml`
 ```yaml
 transcriber:
   default_type: "bcut" # 默认音频转写器
@@ -82,6 +82,21 @@ bilinote search "Python 教程" --platform bilibili
 # 其他命令
 bilinote model-list            # 列出可用模型
 bilinote model-set-default deepseek  # 设置默认模型
+bilinote check # 检查环境（ffmpeg、LLM可用性）
+bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
+```
+
+## 目录结构
+
+```bash
+~/.bilinote/ #windows： C:\Users\<user_name>\.bilinote\
+├── data/
+│   ├── downloads/     # 下载的音频
+│   ├── cache/         # 转写缓存
+│   ├── output/notes/  # 生成的笔记★
+│   └── state/         # 任务状态
+├── config.yaml        # 用户配置★
+└── logs/
 ```
 
 ## 命令说明
@@ -109,18 +124,7 @@ bilinote model-set-default deepseek  # 设置默认模型
 | `--video-understanding` | 启用多模态理解 |
 | `--output` | 输出文件路径 |
 
-## 目录结构
 
-```bash
-~/.bilinote/ #windows： C:\Users\<user_name>\.bilinote\
-├── data/
-│   ├── downloads/     # 下载的音频
-│   ├── cache/         # 转写缓存
-│   ├── output/notes/  # 生成的笔记★
-│   └── state/         # 任务状态
-├── config.yaml        # 用户配置★
-└── logs/
-```
 
 ## 【指南】使用快捷指令运行（仅限 macOS）
 **安装快捷指令**：终端运行 `bilinote install-shortcut`
