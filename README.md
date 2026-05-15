@@ -94,6 +94,8 @@ bilinote model-set-default deepseek  # 设置默认模型
 | `model-set-default <model>` | 设置默认模型 |
 | `config set <key> <value>` | 设置密钥 |
 | `config list` | 查看配置状态 |
+| `install-shortcut` |  安装快捷指令（仅限 macOS） |
+| `check` |  环境检查 |
 
 ### process 参数
 
@@ -119,6 +121,14 @@ bilinote model-set-default deepseek  # 设置默认模型
 ├── config.yaml        # 用户配置★
 └── logs/
 ```
+
+## 【指南】使用快捷指令运行（仅限 macOS）
+**安装快捷指令**：终端运行 `bilinote install-shortcut`
+**使用方式**：
+1. 浏览器内点击网址栏，选择到 B 站视频链接的网址文本。
+2. 点击菜单栏（屏幕左上角）的浏览器 App 名称（如“Safari”）。
+3. 点击【服务】 -> 【BiliNote】 
+
 
 ## 【指南】配置 whisper-cpp 作为本地音频转写器
 
