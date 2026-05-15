@@ -69,6 +69,9 @@ def main():
   # 生成 B站视频笔记（自动识别平台，使用默认模型）
   python cli.py process https://www.bilibili.com/video/BV1xx
   
+  # 批量生成笔记
+  python cli.py process https://www.bilibili.com/video/BV1xx https://www.bilibili.com/video/BV1xx2
+
   # 指定模型生成笔记
   python cli.py process https://www.bilibili.com/video/BV1xx --model gpt-4o
   

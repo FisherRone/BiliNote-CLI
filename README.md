@@ -64,6 +64,9 @@ transcriber:
 # 基础用法
 bilinote process "https://www.bilibili.com/video/BV1mQ9jBcEf4"
 
+# 批量处理
+bilinote process "<url1>" "<url2>"
+
 # 带截图和链接
 bilinote process "<url>" --screenshot --link --style 学术风
 
