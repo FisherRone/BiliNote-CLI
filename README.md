@@ -128,6 +128,7 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 
 ## 【指南】使用快捷指令一键运行（仅限 macOS）
 **安装快捷指令**：终端运行 `bilinote install-shortcut`
+
 **使用方式**：
 1. 浏览器内点击网址栏，选择到 B 站视频链接的网址文本。
 2. 点击菜单栏（屏幕左上角）的浏览器 App 名称（如“Safari”）。
