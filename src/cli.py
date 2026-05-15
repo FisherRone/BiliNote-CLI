@@ -138,7 +138,6 @@ def main():
     process_parser.add_argument('--no-subtitle', action='store_true',
                        help='禁用平台字幕，强制下载音频并转写')
     process_parser.add_argument('--extras', default=None, help='额外参数')
-    process_parser.add_argument('--output', default=None, help='输出文件路径（单任务时有效）')
     process_parser.add_argument('--output-dir', default=None, help='批量输出目录（多任务时自动创建批次目录）')
     
     # search 子命令 - 搜索视频
@@ -159,8 +158,13 @@ def main():
                        help='笔记格式选项')
     search_parser.add_argument('--no-subtitle', action='store_true',
                        help='禁用平台字幕，强制下载音频并转写')
+    search_parser.add_argument('--video-understanding', action='store_true',
+                       help='启用视频多模态理解')
+    search_parser.add_argument('--video-interval', type=int, default=0,
+                       help='视频帧截取间隔（秒）')
+    search_parser.add_argument('--grid-size', nargs=2, type=int, default=None,
+                       help='缩略图网格大小，如 3 3')
     search_parser.add_argument('--extras', default=None, help='额外参数')
-    search_parser.add_argument('--output', default=None, help='输出文件路径')
     search_parser.add_argument('--output-dir', default=None, help='批量输出目录')
     
     # status 子命令 - 查询任务状态
@@ -205,7 +209,7 @@ def main():
     subparsers.add_parser('shortcut-prompt-off', help='关闭快捷指令安装提示')
 
     # check 子命令 - 环境诊断
-    subparsers.add_parser('check', help='环境检查（ffmpeg、API Key、LLM 连通性）')
+    subparsers.add_parser('check', help='环境检查（ffmpeg、API Key、Cookie、LLM 连通性）')
 
     # macOS: 在帮助信息中添加快捷指令提示
     if _is_macos():
@@ -343,7 +347,6 @@ def _process_single(video_url: str, args, quality_map: dict):
             _format=args.format,
             style=args.style,
             extras=args.extras,
-            output_path=args.output,
             video_understanding=args.video_understanding,
             video_interval=args.video_interval,
             grid_size=args.grid_size,
@@ -354,7 +357,7 @@ def _process_single(video_url: str, args, quality_map: dict):
             task_id = task_id or "unknown"
             
             # 保存到文件
-            output_file = args.output or path_manager.get_note_output_path(task_id)
+            output_file = path_manager.get_note_output_path(task_id)
             with open(output_file, 'w', encoding='utf-8') as f:
                 f.write(result.markdown)
             
@@ -572,6 +575,9 @@ def search_videos_cli(args):
                 extras=args.extras,
                 output_path=output_path,
                 no_subtitle=args.no_subtitle,
+                video_understanding=args.video_understanding,
+                video_interval=args.video_interval,
+                grid_size=args.grid_size,
             )
             if result and result.markdown:
                 with open(output_path, 'w', encoding='utf-8') as f:
@@ -717,7 +723,7 @@ def _check_model_api_key(model_name: str) -> bool:
 
 
 def check_cmd():
-    """环境诊断：ffmpeg / API Key 配置 / LLM 连通性"""
+    """环境诊断：ffmpeg / API Key / Cookie / LLM 连通性"""
     import logging
     # 抑制 get_model_config 的 WARNING 日志（check 命令自行报告状态）
     logging.getLogger('config.model_config_manager').setLevel(logging.ERROR)
@@ -734,7 +740,7 @@ def check_cmd():
     print()
 
     # ── 2. API Key 配置状态 ───────────────────────────
-    from app.secret_manager import list_known_keys, get_configured_keys
+    from app.secret_manager import list_known_keys, get_configured_keys, get_secret
     known = list_known_keys()
     configured = get_configured_keys()
 
@@ -747,9 +753,26 @@ def check_cmd():
         status = "✓ 已配置" if key in configured else "✗ 未配置"
         print(f"  {status}  {key:25s}  {desc}")
 
-    # ── 3. LLM 连通性测试 ─────────────────────────────
+    # ── 3. Cookie 配置状态 ───────────────────────────
+    print(f"Cookie 配置状态:\n")
+    cookie_keys = {"BILIBILI_COOKIE": "B站", "DOUYIN_COOKIE": "抖音", "KUAISHOU_COOKIE": "快手"}
+    for key, label in cookie_keys.items():
+        cookie_value = get_secret(key)
+        if cookie_value:
+            has_sessdata = "SESSDATA" in cookie_value if key == "BILIBILI_COOKIE" else None
+            if key == "BILIBILI_COOKIE" and has_sessdata:
+                print(f"  ✓ 已配置  {key:25s}  {label}（含 SESSDATA）")
+            elif key == "BILIBILI_COOKIE" and not has_sessdata:
+                print(f"  ⚠ 已配置  {key:25s}  {label}（缺少 SESSDATA，可能无法获取字幕）")
+            else:
+                print(f"  ✓ 已配置  {key:25s}  {label}")
+        else:
+            print(f"  ✗ 未配置  {key:25s}  {label}")
+    print()
+
+    # ── 4. LLM 连通性测试 ─────────────────────────────
     from config.model_config_manager import MODELS
-    print(f"\nLLM 连通性测试（仅检查已配置 Key 的模型）:\n")
+    print(f"LLM 连通性测试（仅检查已配置 Key 的模型）:\n")
     tested = 0
     for model_id in sorted(MODELS.keys()):
         config = get_model_config(model_id)
