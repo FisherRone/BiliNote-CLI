@@ -19,6 +19,7 @@ from app.transcriber.base import Transcriber
 from app.transcriber.transcriber_provider import get_transcriber_with_fallback
 from app.utils.path_helper import get_path_manager
 from app.utils.video_reader import VideoReader
+from ffmpeg_helper import ensure_ffmpeg_or_raise
 
 logger = logging.getLogger(__name__)
 path_manager = get_path_manager()
@@ -188,6 +189,9 @@ class TaskPreparer:
                 return audio
             except Exception as exc:
                 logger.warning(f"元信息提取失败，将尝试完整下载: {exc}")
+
+        # 需要实际下载音视频，检查 ffmpeg 是否可用
+        ensure_ffmpeg_or_raise()
 
         # 判断是否需要下载视频
         need_video = screenshot or video_understanding

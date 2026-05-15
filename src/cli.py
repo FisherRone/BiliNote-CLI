@@ -17,6 +17,8 @@ from app.enmus.note_enums import DownloadQuality
 from app.utils.url_parser import extract_video_id, detect_platform
 from app.utils.path_helper import get_path_manager
 from config.model_config_manager import remove_model, list_available_models, get_model_config, get_default_model, set_default_model
+from ffmpeg_helper import check_ffmpeg_exists
+from app.gpt.provider.OpenAI_compatible_provider import OpenAICompatibleProvider
 
 
 # ── macOS 快捷指令 ──────────────────────────────────────────────
@@ -202,6 +204,9 @@ def main():
     # shortcut-prompt-off 子命令
     subparsers.add_parser('shortcut-prompt-off', help='关闭快捷指令安装提示')
 
+    # check 子命令 - 环境诊断
+    subparsers.add_parser('check', help='环境检查（ffmpeg、API Key、LLM 连通性）')
+
     # macOS: 在帮助信息中添加快捷指令提示
     if _is_macos():
         parser.epilog += "\n" + _get_shortcut_help_text()
@@ -247,6 +252,11 @@ def main():
         config_cli(args)
         return
 
+    # 环境检查子命令
+    if args.command == 'check':
+        check_cmd()
+        return
+
     # 快捷指令子命令
     if args.command == 'install-shortcut':
         install_shortcut_cmd()
@@ -267,6 +277,10 @@ def process_video_cli(args):
         if not args.model:
             print('错误: 未配置默认模型，请使用 --model 指定模型或 model-set-default 设置默认模型')
             sys.exit(1)
+    
+    # 静态预检：API Key 是否存在
+    if not _check_model_api_key(args.model):
+        sys.exit(1)
     
     # 处理 format 参数
     if args.screenshot and 'screenshot' not in args.format:
@@ -518,6 +532,10 @@ def search_videos_cli(args):
         print("未配置默认模型，请先 --model-set-default")
         return
 
+    # 静态预检：API Key 是否存在
+    if not _check_model_api_key(model_name):
+        return
+
     # 5. 使用 BatchProcessor 批量执行
     quality_map = {
         'fast': DownloadQuality.fast,
@@ -682,6 +700,81 @@ def shortcut_prompt_off_cmd():
     Path(_SHORTCUT_MARKER).touch()
     print("已关闭快捷指令安装提示")
     print("如需再次查看: bilinote --help")
+
+
+def _check_model_api_key(model_name: str) -> bool:
+    """
+    静态预检：校验指定模型的 API Key 是否已配置（不发起网络请求）。
+    返回 True 表示 Key 已配置，False 则打印错误提示。
+    """
+    config = get_model_config(model_name)
+    if not config:
+        print(f"\n✗ 模型 \"{model_name}\" 的 API Key 未配置")
+        print(f"  使用 bilinote config set <KEY> <value> 配置")
+        print(f"  使用 bilinote check 查看全部状态")
+        return False
+    return True
+
+
+def check_cmd():
+    """环境诊断：ffmpeg / API Key 配置 / LLM 连通性"""
+    import logging
+    # 抑制 get_model_config 的 WARNING 日志（check 命令自行报告状态）
+    logging.getLogger('config.model_config_manager').setLevel(logging.ERROR)
+
+    print("\n环境检查结果\n" + "=" * 50)
+
+    # ── 1. ffmpeg ──────────────────────────────────────
+    if check_ffmpeg_exists():
+        print("  ✓ ffmpeg    已安装")
+    else:
+        print("  ✗ ffmpeg    未安装")
+        print("    👉 下载：https://ffmpeg.org/download.html")
+        print("    💡 自定义路径：在 config.yaml 中设置 ffmpeg_bin_path")
+    print()
+
+    # ── 2. API Key 配置状态 ───────────────────────────
+    from app.secret_manager import list_known_keys, get_configured_keys
+    known = list_known_keys()
+    configured = get_configured_keys()
+
+    print(f"API Key 配置状态 (仅 LLM 相关):\n")
+    llm_key_names = {"OPENAI_API_KEY", "DEEPSEEK_API_KEY", "QWEN_API_KEY",
+                     "CLAUDE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OLLAMA_API_KEY"}
+    for key, desc in known.items():
+        if key not in llm_key_names:
+            continue
+        status = "✓ 已配置" if key in configured else "✗ 未配置"
+        print(f"  {status}  {key:25s}  {desc}")
+
+    # ── 3. LLM 连通性测试 ─────────────────────────────
+    from config.model_config_manager import MODELS
+    print(f"\nLLM 连通性测试（仅检查已配置 Key 的模型）:\n")
+    tested = 0
+    for model_id in sorted(MODELS.keys()):
+        config = get_model_config(model_id)
+        if not config:
+            continue
+        tested += 1
+        model_name = config["model_name"]
+        base_url = config["base_url"]
+        api_key = config["api_key"]
+        success, error = OpenAICompatibleProvider.test_connection(
+            api_key=api_key, base_url=base_url, model_name=model_name
+        )
+        if success:
+            print(f"  ✓ {model_id:20s} → 连通正常")
+        else:
+            short_err = error[:80] + ("..." if len(error) > 80 else "")
+            print(f"  ✗ {model_id:20s} → 不可达")
+            print(f"    {short_err}")
+
+    if tested == 0:
+        print("  (没有已配置 API Key 的模型)\n")
+        print(f"  使用 bilinote config set <KEY> <value> 配置 API Key")
+
+    print(f"\n{'=' * 50}")
+    print(f"使用 bilinote check 随时复查环境状态\n")
 
 
 def show_task_status(task_id: str):

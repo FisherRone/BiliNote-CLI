@@ -15,17 +15,21 @@ class OpenAICompatibleProvider:
         return self.client
 
     @staticmethod
-    def test_connection(api_key: str, base_url: str) -> bool:
+    def test_connection(api_key: str, base_url: str, model_name: str) -> tuple[bool, str]:
+        """
+        轻量级连通性测试：发送一条最小 chat 请求验证 Key/服务/模型名是否有效。
+        返回 (是否成功, 错误描述)。
+        """
         try:
             client = OpenAI(api_key=api_key, base_url=base_url)
-            model = client.models.list()
-            # for segment in model:
-            #     print(segment)
-            # print(model)
+            client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": "ok"}],
+                max_tokens=1,
+            )
             logging.info("连通性测试成功")
-            return True
+            return True, ""
         except Exception as e:
-            logging.info(f"连通性测试失败：{e}")
-
-            # print(f"Error connecting to OpenAI API: {e}")
-            return False
+            error_str = str(e)
+            logging.info(f"连通性测试失败：{error_str}")
+            return False, error_str
