@@ -1,27 +1,19 @@
 # BiliNote-CLI
+[English](README.en.md) | 简体中文
 
 AI 视频笔记生成工具 - 让 AI 为你的视频做笔记
 
 > **项目说明**：本项目基于 [BiliNote](https://github.com/JefferyHcool/BiliNote) fork 并进行大量重构。  
 > 原项目采用 MIT 许可证，感谢原作者 Jeffery Huang 的杰出工作。
 
-## 🧬 与原项目的关系
-
-- **Fork 自**：[BiliNote v2.0.0](https://github.com/JefferyHcool/BiliNote)
-- **主要重构内容**：
-  -  改为 cli 应用
-  -  目录结构调整
-  -  添加 b 站视频搜索等若干功能
-- **许可证**：继承 MIT 许可证
-- **是否继续同步上游**：否
 
 ## 功能
 
+让 ai 自动把视频转换为 markdown 格式笔记
 - 多平台支持：Bilibili、YouTube、抖音、快手、本地视频
-- 本地音频转写：基于 whisper-cpp
 - AI 笔记生成：支持 DeepSeek、OpenAI、Qwen 等
-- 智能缓存：转写结果和笔记自动缓存
 - 截图插入、视频跳转链接、多模态理解
+- 批量执行、关键词搜索
 
 ## 安装
 
