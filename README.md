@@ -49,14 +49,6 @@ transcriber:
   whisper_model_size: "base"
 ```
 
-### 【教程】提取 Safari Cookie
-
-1. 打开 Safari 的开发者模式。
-2. 在浏览器中打开目标网站，按 F12（或 Cmd + Opt + I）打开开发者工具。
-3. 切换到 **Network (网络)** 标签页。
-4. 刷新页面，随便找一个请求，**右键**点击该请求。
-5. 选择 **Copy** -> **Copy as cURL**。
-6. 在你的剪贴板里，你会看到一串完整的命令，其中 `-H 'cookie: ...'` 后面就是该网站的所有 Cookie。
 
 ## 使用
 
@@ -124,9 +116,17 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 | `--video-understanding` | 启用多模态理解 |
 | `--output` | 输出文件路径 |
 
+## 【指南】提取 Safari Cookie
+
+1. 打开 Safari 的开发者模式。
+2. 在浏览器中打开目标网站，按 F12（或 Cmd + Opt + I）打开开发者工具。
+3. 切换到 **Network (网络)** 标签页。
+4. 刷新页面，随便找一个请求，**右键**点击该请求。
+5. 选择 **Copy** -> **Copy as cURL**。
+6. 在你的剪贴板里，你会看到一串完整的命令，其中 `-H 'cookie: ...'` 后面就是该网站的所有 Cookie。
 
 
-## 【指南】使用快捷指令运行（仅限 macOS）
+## 【指南】使用快捷指令一键运行（仅限 macOS）
 **安装快捷指令**：终端运行 `bilinote install-shortcut`
 **使用方式**：
 1. 浏览器内点击网址栏，选择到 B 站视频链接的网址文本。
