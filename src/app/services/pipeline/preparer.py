@@ -50,6 +50,8 @@ class TaskPreparer:
         grid_size: Optional[List[int]] = None,
         no_subtitle: bool = False,
     ) -> Optional[PreparedTask]:
+        _params = {k: v for k, v in sorted(locals().items()) if k != "self"}
+        logger.info(f"[prepare] params: {_params}")
         if grid_size is None:
             grid_size = []
 
@@ -163,6 +165,7 @@ class TaskPreparer:
         grid_size: List[int],
         skip_download: bool = False,
     ) -> AudioDownloadResult:
+        logger.info(f"开始下载音视频 (task_id={task_id})")
         TaskCache.update_status(task_id, TaskStatus.DOWNLOADING)
 
         # 已有音频缓存，尝试加载

@@ -114,7 +114,7 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 | `--link` | 插入视频跳转链接 |
 | `--style` | 笔记风格：学术风、口语风等 |
 | `--video-understanding` | 启用多模态理解 |
-| `--output` | 输出文件路径 |
+| `--output-dir` | 输出目录路径 |
 
 ## 【指南】提取 Safari Cookie
 

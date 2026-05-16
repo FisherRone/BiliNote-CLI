@@ -59,6 +59,7 @@ class AIProcessor:
                 logger.info(f"最终笔记已保存 ({markdown_cache_file})")
 
             # 保存元数据
+            logger.info(f"开始保存笔记 (task_id={task_id})")
             TaskCache.update_status(task_id, TaskStatus.SAVING)
             TaskCache.save_metadata(
                 video_id=prepared.audio_meta.video_id,
