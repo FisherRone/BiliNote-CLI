@@ -1,6 +1,7 @@
 # macOS
 .DS_Store
 publish.sh
+TODO.md
 
 # Python
 __pycache__/
