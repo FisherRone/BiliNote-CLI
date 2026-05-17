@@ -1,6 +1,7 @@
 # macOS
 .DS_Store
 publish.sh
+publish.command
 TODO.md
 
 # Python
