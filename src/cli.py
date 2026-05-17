@@ -12,8 +12,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.services.note import NoteGenerator
-from app.services.batch_processor import BatchProcessor, AsyncBatchProcessor
-from app.enmus.note_enums import DownloadQuality
+from app.services.batch_processor import AsyncBatchProcessor
+from app.models.process_config import ProcessConfig
 from app.utils.url_parser import extract_video_id, detect_platform
 from app.utils.path_helper import get_path_manager
 from config.model_config_manager import remove_model, list_available_models, get_model_config, get_default_model, set_default_model
@@ -56,6 +56,32 @@ def _get_shortcut_process_prompt():
         + "\n   关闭提示: bilinote shortcut-prompt-off\n"
         "   再次查看: bilinote --help"
     )
+
+
+def _add_process_args(parser: argparse.ArgumentParser) -> None:
+    """为 process / search 子命令添加共享参数"""
+    parser.add_argument('--quality', default='medium',
+                        choices=['fast', 'medium', 'slow'],
+                        help='音频下载质量')
+    parser.add_argument('--screenshot', action='store_true', help='在笔记中插入截图')
+    parser.add_argument('--link', action='store_true', help='在笔记中插入视频跳转链接')
+    parser.add_argument('--style', default=None, help='笔记风格（学术风、口语风等）')
+    parser.add_argument('--format', nargs='*', default=[],
+                        choices=['screenshot', 'link'],
+                        help='笔记格式选项')
+    parser.add_argument('--video-understanding', action='store_true',
+                        help='启用视频多模态理解')
+    parser.add_argument('--video-interval', type=int, default=0,
+                        help='视频帧截取间隔（秒）')
+    parser.add_argument('--grid-size', nargs=2, type=int, default=None,
+                        help='缩略图网格大小，如 3 3')
+    parser.add_argument('--no-subtitle', action='store_true',
+                        help='禁用平台字幕，强制下载音频并转写')
+    parser.add_argument('--extras', default=None, help='额外参数')
+
+
+_SHARED_ARGS_PARSER = argparse.ArgumentParser(add_help=False)
+_add_process_args(_SHARED_ARGS_PARSER)
 
 
 def main():
@@ -114,57 +140,23 @@ def main():
     subparsers = parser.add_subparsers(dest='command', help='可用命令')
     
     # process 子命令 - 处理视频生成笔记
-    process_parser = subparsers.add_parser('process', help='处理视频生成笔记（支持批量 URL）')
+    process_parser = subparsers.add_parser('process', help='处理视频生成笔记（支持批量 URL）',
+                                          parents=[_SHARED_ARGS_PARSER])
     process_parser.add_argument('video_urls', nargs='+', help='视频链接或本地文件路径（可多个）')
-    process_parser.add_argument('--platform', 
+    process_parser.add_argument('--platform',
                        choices=['bilibili', 'youtube', 'douyin', 'kuaishou', 'local'],
                        help='视频平台（可选，默认自动识别）')
     process_parser.add_argument('--model', default=None, help='模型名称（可选，默认使用配置的默认模型）')
-    process_parser.add_argument('--quality', default='medium', 
-                       choices=['fast', 'medium', 'slow'],
-                       help='音频下载质量')
-    process_parser.add_argument('--screenshot', action='store_true', help='在笔记中插入截图')
-    process_parser.add_argument('--link', action='store_true', help='在笔记中插入视频跳转链接')
-    process_parser.add_argument('--style', default=None, help='笔记风格（学术风、口语风等）')
-    process_parser.add_argument('--format', nargs='*', default=[], 
-                       choices=['screenshot', 'link'],
-                       help='笔记格式选项')
-    process_parser.add_argument('--video-understanding', action='store_true',
-                       help='启用视频多模态理解')
-    process_parser.add_argument('--video-interval', type=int, default=0,
-                       help='视频帧截取间隔（秒）')
-    process_parser.add_argument('--grid-size', nargs=2, type=int, default=None,
-                       help='缩略图网格大小，如 3 3')
-    process_parser.add_argument('--no-subtitle', action='store_true',
-                       help='禁用平台字幕，强制下载音频并转写')
-    process_parser.add_argument('--extras', default=None, help='额外参数')
     process_parser.add_argument('--output-dir', default=None, help='批量输出目录（多任务时自动创建批次目录）')
     
     # search 子命令 - 搜索视频
-    search_parser = subparsers.add_parser('search', help='搜索视频并交互选择批量执行')
+    search_parser = subparsers.add_parser('search', help='搜索视频并交互选择批量执行',
+                                         parents=[_SHARED_ARGS_PARSER])
     search_parser.add_argument('keyword', help='搜索关键词')
     search_parser.add_argument('--platform', default='bilibili',
                        choices=['bilibili', 'youtube'],
                        help='搜索平台（默认 bilibili）')
     search_parser.add_argument('--model', default=None, help='模型名称')
-    search_parser.add_argument('--quality', default='medium', 
-                       choices=['fast', 'medium', 'slow'],
-                       help='音频下载质量')
-    search_parser.add_argument('--screenshot', action='store_true', help='在笔记中插入截图')
-    search_parser.add_argument('--link', action='store_true', help='在笔记中插入视频跳转链接')
-    search_parser.add_argument('--style', default=None, help='笔记风格')
-    search_parser.add_argument('--format', nargs='*', default=[], 
-                       choices=['screenshot', 'link'],
-                       help='笔记格式选项')
-    search_parser.add_argument('--no-subtitle', action='store_true',
-                       help='禁用平台字幕，强制下载音频并转写')
-    search_parser.add_argument('--video-understanding', action='store_true',
-                       help='启用视频多模态理解')
-    search_parser.add_argument('--video-interval', type=int, default=0,
-                       help='视频帧截取间隔（秒）')
-    search_parser.add_argument('--grid-size', nargs=2, type=int, default=None,
-                       help='缩略图网格大小，如 3 3')
-    search_parser.add_argument('--extras', default=None, help='额外参数')
     search_parser.add_argument('--output-dir', default=None, help='批量输出目录')
     
     # status 子命令 - 查询任务状态
@@ -276,119 +268,23 @@ def process_video_cli(args):
     video_urls = args.video_urls
     
     # 使用默认模型
-    if not args.model:
-        args.model = get_default_model()
-        if not args.model:
+    model_name = args.model
+    if not model_name:
+        model_name = get_default_model()
+        if not model_name:
             print('错误: 未配置默认模型，请使用 --model 指定模型或 model-set-default 设置默认模型')
             sys.exit(1)
     
     # 静态预检：API Key 是否存在
-    if not _check_model_api_key(args.model):
+    if not _check_model_api_key(model_name):
         sys.exit(1)
     
-    # 处理 format 参数
-    if args.screenshot and 'screenshot' not in args.format:
-        args.format.append('screenshot')
-    if args.link and 'link' not in args.format:
-        args.format.append('link')
+    # 一键从 argparse namespace 生成 ProcessConfig（quality、format 等自动处理）
+    cfg = ProcessConfig(**vars(args))
     
-    # 转换 quality
-    quality_map = {
-        'fast': DownloadQuality.fast,
-        'medium': DownloadQuality.medium,
-        'slow': DownloadQuality.slow
-    }
-    
-    # 单任务处理（兼容旧用法）
-    if len(video_urls) == 1 and not args.output_dir:
-        _process_single(video_urls[0], args, quality_map)
-        _show_shortcut_process_prompt()
-        return
-    
-    # 批量处理
-    _process_batch(video_urls, args, quality_map)
-    _show_shortcut_process_prompt()
-
-
-def _process_single(video_url: str, args, quality_map: dict):
-    """处理单个视频"""
-    # 自动识别平台
-    platform = args.platform
-    if not platform:
-        platform = detect_platform(video_url)
-        if not platform:
-            print('错误: 无法自动识别平台，请使用 --platform 手动指定')
-            sys.exit(1)
-        print(f"自动识别平台: {platform}")
-    
-    print(f"使用默认模型: {args.model}")
-    
-    try:
-        print(f"开始生成笔记...")
-        print(f"平台: {platform}")
-        print(f"模型: {args.model}")
-        print(f"视频: {video_url}")
-        print("-" * 60)
-        
-        note_generator = NoteGenerator()
-        path_manager = get_path_manager()
-        
-        # 提取 task_id 用于缓存和文件命名
-        task_id = extract_video_id(video_url, platform)
-        
-        result = note_generator.generate(
-            video_url=video_url,
-            platform=platform,
-            quality=quality_map[args.quality],
-            task_id=task_id,
-            model_name=args.model,
-            link=args.link,
-            screenshot=args.screenshot,
-            _format=args.format,
-            style=args.style,
-            extras=args.extras,
-            video_understanding=args.video_understanding,
-            video_interval=args.video_interval,
-            grid_size=args.grid_size,
-            no_subtitle=args.no_subtitle,
-        )
-        
-        if result and result.markdown:
-            task_id = task_id or "unknown"
-            
-            # 保存到文件
-            output_file = path_manager.get_note_output_path(task_id)
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(result.markdown)
-            
-            print(f"\n{'='*60}")
-            print(f"✓ 笔记生成成功！")
-            print(f"保存到: {output_file}")
-            print(f"{'='*60}\n")
-            print(result.markdown[:500])
-            if len(result.markdown) > 500:
-                print(f"\n... (更多内容请查看文件)")
-            print(f"\n{'='*60}")
-        else:
-            print("\n✗ 笔记生成失败，请检查日志")
-            sys.exit(1)
-            
-    except Exception as e:
-        print(f"\n✗ 错误: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-
-def _process_batch(video_urls: list, args, quality_map: dict):
-    """批量处理视频（异步并行 AI 阶段）"""
-    print(f"批量处理 {len(video_urls)} 个视频...")
-    print(f"使用模型: {args.model}")
-    
-    # 准备任务列表
+    # 构建任务列表
     items = []
     for url in video_urls:
-        # 自动识别平台
         platform = args.platform or detect_platform(url)
         if not platform:
             print(f"警告: 无法识别平台，跳过: {url}")
@@ -396,12 +292,72 @@ def _process_batch(video_urls: list, args, quality_map: dict):
         task_id = extract_video_id(url, platform)
         items.append((url, platform, task_id, task_id))
     
+    _process_tasks(items, cfg, model_name, args.output_dir)
+    _show_shortcut_process_prompt()
+
+
+def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir: str | None = None, batch_name: str | None = None):
+    """统一任务处理入口
+    
+    单任务：同步串行执行（保留笔记预览打印）
+    多任务：主线程串行准备 + 线程池并行 AI 处理
+    """
     if not items:
         print("没有有效的视频链接")
         sys.exit(1)
     
-    # 创建异步批量处理器
-    batch_processor = AsyncBatchProcessor(output_dir=args.output_dir)
+    # ── 单任务：同步串行 ──
+    if len(items) == 1:
+        url, platform, task_id, title = items[0]
+        
+        print(f"开始生成笔记...")
+        print(f"平台: {platform}")
+        print(f"模型: {model_name}")
+        print(f"视频: {url}")
+        print("-" * 60)
+        
+        try:
+            note_generator = NoteGenerator()
+            result = note_generator.generate(
+                video_url=url,
+                platform=platform,
+                cfg=cfg,
+                task_id=task_id,
+                model_name=model_name,
+            )
+            
+            if result and result.markdown:
+                task_id = task_id or "unknown"
+                path_manager = get_path_manager()
+                output_file = path_manager.get_note_output_path(task_id)
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(result.markdown)
+                
+                print(f"\n{'='*60}")
+                print(f"✓ 笔记生成成功！")
+                print(f"保存到: {output_file}")
+                print(f"{'='*60}\n")
+                print(result.markdown[:500])
+                if len(result.markdown) > 500:
+                    print(f"\n... (更多内容请查看文件)")
+                print(f"\n{'='*60}")
+            else:
+                print("\n✗ 笔记生成失败，请检查日志")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"\n✗ 错误: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+        
+        return
+    
+    # ── 多任务：异步并行 ──
+    print(f"批量处理 {len(items)} 个视频...")
+    print(f"使用模型: {model_name}")
+    
+    batch_processor = AsyncBatchProcessor(batch_name=batch_name, output_dir=output_dir)
     note_generator = NoteGenerator()
     
     def prepare_func(url: str, platform: str, task_id: str, output_path: str):
@@ -410,18 +366,9 @@ def _process_batch(video_urls: list, args, quality_map: dict):
             return note_generator.prepare(
                 video_url=url,
                 platform=platform,
-                quality=quality_map[args.quality],
+                cfg=cfg,
                 task_id=task_id,
-                link=args.link,
-                screenshot=args.screenshot,
-                _format=args.format,
-                style=args.style,
-                extras=args.extras,
                 output_path=output_path,
-                video_understanding=args.video_understanding,
-                video_interval=args.video_interval,
-                grid_size=args.grid_size,
-                no_subtitle=args.no_subtitle,
             )
         except Exception as e:
             print(f"  ✗ 准备错误: {e}")
@@ -431,7 +378,7 @@ def _process_batch(video_urls: list, args, quality_map: dict):
         """异步 AI 阶段：每个 worker 线程使用独立 NoteGenerator 实例"""
         try:
             worker = NoteGenerator()
-            result = worker.summarize_and_save(prepared, model_name=args.model)
+            result = worker.summarize_and_save(prepared, model_name=model_name)
             return result is not None and result.markdown
         except Exception as e:
             print(f"  ✗ AI 错误: {e}")
@@ -539,14 +486,9 @@ def search_videos_cli(args):
     if not _check_model_api_key(model_name):
         return
 
-    # 5. 使用 BatchProcessor 批量执行
-    quality_map = {
-        'fast': DownloadQuality.fast,
-        'medium': DownloadQuality.medium,
-        'slow': DownloadQuality.slow
-    }
+    # 5. 准备任务列表并统一处理
+    cfg = ProcessConfig(**vars(args))
     
-    # 准备任务列表: (url, platform, task_id, title)
     task_items = []
     for item in selected:
         url = item['link']
@@ -555,44 +497,7 @@ def search_videos_cli(args):
         title = item.get('title', task_id)
         task_items.append((url, detected_platform, task_id, title))
     
-    # 创建批量处理器（使用关键词作为批次名称）
-    batch_processor = BatchProcessor(batch_name=keyword, output_dir=args.output_dir)
-    note_generator = NoteGenerator()
-    
-    def process_func(url: str, platform: str, task_id: str, output_path: str) -> bool:
-        """单个任务处理函数"""
-        try:
-            result = note_generator.generate(
-                video_url=url,
-                platform=platform,
-                quality=quality_map[args.quality],
-                task_id=task_id,
-                model_name=model_name,
-                link=args.link,
-                screenshot=args.screenshot,
-                _format=args.format,
-                style=args.style,
-                extras=args.extras,
-                output_path=output_path,
-                no_subtitle=args.no_subtitle,
-                video_understanding=args.video_understanding,
-                video_interval=args.video_interval,
-                grid_size=args.grid_size,
-            )
-            if result and result.markdown:
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(result.markdown)
-                return True
-            return False
-        except Exception as e:
-            print(f"  ✗ 错误: {e}")
-            return False
-    
-    # 执行批量处理
-    success_count, fail_count = batch_processor.process(task_items, process_func)
-    
-    if fail_count > 0:
-        sys.exit(1)
+    _process_tasks(task_items, cfg, model_name, args.output_dir, batch_name=keyword)
 
 
 def list_models():

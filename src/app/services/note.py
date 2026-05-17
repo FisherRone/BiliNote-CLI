@@ -7,6 +7,7 @@ from app.enmus.note_enums import DownloadQuality
 from app.enmus.task_status_enums import TaskStatus
 from app.models.notes_model import NoteResult
 from app.models.pipeline_model import PreparedTask
+from app.models.process_config import ProcessConfig
 from app.services.cache.task_cache import TaskCache
 from app.services.pipeline.ai_processor import AIProcessor
 from app.services.pipeline.preparer import TaskPreparer
@@ -42,19 +43,10 @@ class NoteGenerator:
         self,
         video_url: Union[str, HttpUrl],
         platform: str,
-        quality: DownloadQuality = DownloadQuality.medium,
+        cfg: ProcessConfig,
         task_id: Optional[str] = None,
         model_name: Optional[str] = None,
-        link: bool = False,
-        screenshot: bool = False,
-        _format: Optional[List[str]] = None,
-        style: Optional[str] = None,
-        extras: Optional[str] = None,
         output_path: Optional[str] = None,
-        video_understanding: bool = False,
-        video_interval: int = 0,
-        grid_size: Optional[List[int]] = None,
-        no_subtitle: bool = False,
     ) -> Optional[NoteResult]:
         """
         主流程：按步骤依次下载、转写、GPT 总结、截图/链接处理、存库、返回 NoteResult。
@@ -63,18 +55,9 @@ class NoteGenerator:
             prepared = self.prepare(
                 video_url=video_url,
                 platform=platform,
-                quality=quality,
+                cfg=cfg,
                 task_id=task_id,
-                link=link,
-                screenshot=screenshot,
-                _format=_format,
-                style=style,
-                extras=extras,
                 output_path=output_path,
-                video_understanding=video_understanding,
-                video_interval=video_interval,
-                grid_size=grid_size,
-                no_subtitle=no_subtitle,
             )
             if prepared is None:
                 return None
@@ -88,18 +71,9 @@ class NoteGenerator:
         self,
         video_url: Union[str, HttpUrl],
         platform: str,
-        quality: DownloadQuality = DownloadQuality.medium,
+        cfg: ProcessConfig,
         task_id: Optional[str] = None,
-        link: bool = False,
-        screenshot: bool = False,
-        _format: Optional[List[str]] = None,
-        style: Optional[str] = None,
-        extras: Optional[str] = None,
         output_path: Optional[str] = None,
-        video_understanding: bool = False,
-        video_interval: int = 0,
-        grid_size: Optional[List[int]] = None,
-        no_subtitle: bool = False,
     ) -> Optional[PreparedTask]:
         """
         同步准备阶段：下载、转写、构建 GPTSource。
@@ -108,18 +82,9 @@ class NoteGenerator:
         return self.preparer.prepare(
             video_url=video_url,
             platform=platform,
-            quality=quality,
+            cfg=cfg,
             task_id=task_id,
-            link=link,
-            screenshot=screenshot,
-            _format=_format,
-            style=style,
-            extras=extras,
             output_path=output_path,
-            video_understanding=video_understanding,
-            video_interval=video_interval,
-            grid_size=grid_size,
-            no_subtitle=no_subtitle,
         )
 
     def summarize_and_save(

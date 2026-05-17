@@ -12,6 +12,7 @@ from app.exceptions.note import NoteError
 from app.models.audio_model import AudioDownloadResult
 from app.models.gpt_model import GPTSource
 from app.models.pipeline_model import PreparedTask
+from app.models.process_config import ProcessConfig
 from app.models.transcriber_model import TranscriptResult
 from app.services.cache.task_cache import TaskCache
 from app.services.constant import SUPPORT_PLATFORM_MAP
@@ -37,23 +38,12 @@ class TaskPreparer:
         self,
         video_url: Union[str, HttpUrl],
         platform: str,
-        quality: DownloadQuality = DownloadQuality.medium,
+        cfg: ProcessConfig,
         task_id: Optional[str] = None,
-        link: bool = False,
-        screenshot: bool = False,
-        _format: Optional[List[str]] = None,
-        style: Optional[str] = None,
-        extras: Optional[str] = None,
         output_path: Optional[str] = None,
-        video_understanding: bool = False,
-        video_interval: int = 0,
-        grid_size: Optional[List[int]] = None,
-        no_subtitle: bool = False,
     ) -> Optional[PreparedTask]:
-        _params = {k: v for k, v in sorted(locals().items()) if k != "self"}
-        logger.info(f"[prepare] params: {_params}")
-        if grid_size is None:
-            grid_size = []
+        logger.info(f"[prepare] params: {cfg.model_dump()}")
+        grid_size: List[int] = list(cfg.grid_size) if cfg.grid_size else []
 
         try:
             logger.info(f"开始准备任务 (task_id={task_id})")
@@ -65,7 +55,7 @@ class TaskPreparer:
             # 1. 获取字幕/转写：优先缓存 → 平台字幕 → 音频转写
             transcript = TaskCache.load_transcript(task_id) if task_id else None
 
-            if transcript is None and not no_subtitle:
+            if transcript is None and not cfg.no_subtitle:
                 logger.info("尝试获取平台字幕（优先于音频下载）...")
                 try:
                     transcript = downloader.download_subtitles(video_url)
@@ -79,21 +69,21 @@ class TaskPreparer:
                 except Exception as e:
                     logger.warning(f"获取平台字幕失败: {e}，将下载音频后转写")
                     transcript = None
-            elif no_subtitle:
+            elif cfg.no_subtitle:
                 logger.info("已禁用字幕，跳过平台字幕获取，将直接下载音频并转写")
 
             # 2. 下载音频/视频
             has_transcript = transcript is not None
-            need_full_download = not has_transcript or screenshot or video_understanding
+            need_full_download = not has_transcript or cfg.screenshot or cfg.video_understanding
             audio_meta = self._download_media(
                 downloader=downloader,
                 video_url=video_url,
-                quality=quality,
+                quality=cfg.quality,
                 task_id=task_id,
                 output_path=output_path,
-                screenshot=screenshot,
-                video_understanding=video_understanding,
-                video_interval=video_interval,
+                screenshot=cfg.screenshot,
+                video_understanding=cfg.video_understanding,
+                video_interval=cfg.video_interval,
                 grid_size=grid_size,
                 skip_download=not need_full_download,
             )
@@ -110,12 +100,12 @@ class TaskPreparer:
                 title=audio_meta.title,
                 segment=transcript.segments if transcript else [],
                 tags=audio_meta.raw_info.get("tags", []),
-                screenshot=screenshot,
+                screenshot=cfg.screenshot,
                 video_img_urls=self.video_img_urls,
-                link=link,
-                _format=_format or [],
-                style=style,
-                extras=extras,
+                link=cfg.link,
+                _format=cfg.format,
+                style=cfg.style,
+                extras=cfg.extras,
                 checkpoint_key=task_id,
             )
 
@@ -128,12 +118,12 @@ class TaskPreparer:
                 transcript=transcript,
                 video_path=self.video_path,
                 video_img_urls=self.video_img_urls or [],
-                link=link,
-                screenshot=screenshot,
-                formats=_format or [],
+                link=cfg.link,
+                screenshot=cfg.screenshot,
+                formats=cfg.format,
                 output_path=str(markdown_cache_file) if markdown_cache_file else None,
-                style=style,
-                extras=extras,
+                style=cfg.style,
+                extras=cfg.extras,
             )
 
         except Exception as exc:
