@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -109,8 +110,14 @@ def main():
   # 处理本地视频
   python cli.py process ./video.mp4
   
-  # 搜索视频并交互选择批量生成笔记
+  # 搜索视频并保存结果
   python cli.py search "关键词" --platform bilibili
+  
+  # 从搜索结果处理全部视频
+  python cli.py process --json ~/.bilinote/output/search_result/xxx.json
+  
+  # 从搜索结果选择指定序号处理
+  python cli.py process --json ~/.bilinote/output/search_result/xxx.json --index 1 2 3
   
   # 查看任务状态
   python cli.py status <task_id>
@@ -140,9 +147,14 @@ def main():
     subparsers = parser.add_subparsers(dest='command', help='可用命令')
     
     # process 子命令 - 处理视频生成笔记
-    process_parser = subparsers.add_parser('process', help='处理视频生成笔记（支持批量 URL）',
+    process_parser = subparsers.add_parser('process', help='处理视频生成笔记（支持批量 URL 或 JSON）',
                                           parents=[_SHARED_ARGS_PARSER])
-    process_parser.add_argument('video_urls', nargs='+', help='视频链接或本地文件路径（可多个）')
+    process_parser.add_argument('video_urls', nargs='*', default=[],
+                       help='视频链接或本地文件路径（可多个，与 --json 二选一）')
+    process_parser.add_argument('--json', dest='json_path', default=None,
+                       help='从 search 结果 JSON 文件读取链接')
+    process_parser.add_argument('--index', nargs='+', type=int, default=None,
+                       help='指定 JSON 中要处理的视频序号（如 --index 1 2 3）')
     process_parser.add_argument('--platform',
                        choices=['bilibili', 'youtube', 'douyin', 'kuaishou', 'local'],
                        help='视频平台（可选，默认自动识别）')
@@ -150,14 +162,13 @@ def main():
     process_parser.add_argument('--output-dir', default=None, help='批量输出目录（多任务时自动创建批次目录）')
     
     # search 子命令 - 搜索视频
-    search_parser = subparsers.add_parser('search', help='搜索视频并交互选择批量执行',
-                                         parents=[_SHARED_ARGS_PARSER])
+    search_parser = subparsers.add_parser('search', help='搜索视频并保存结果为 JSON')
     search_parser.add_argument('keyword', help='搜索关键词')
     search_parser.add_argument('--platform', default='bilibili',
                        choices=['bilibili', 'youtube'],
                        help='搜索平台（默认 bilibili）')
-    search_parser.add_argument('--model', default=None, help='模型名称')
-    search_parser.add_argument('--output-dir', default=None, help='批量输出目录')
+    search_parser.add_argument('--output-dir', default=None,
+                       help='搜索结果保存目录（默认 ~/.bilinote/output/search_result）')
     
     # status 子命令 - 查询任务状态
     status_parser = subparsers.add_parser('status', help='查询任务状态')
@@ -264,25 +275,33 @@ def main():
 
 
 def process_video_cli(args):
-    """处理视频生成笔记（支持批量）"""
+    """处理视频生成笔记（支持批量 URL 或 JSON）"""
     video_urls = args.video_urls
-    
-    # 使用默认模型
+    json_path = args.json_path
+
+    if not video_urls and not json_path:
+        print('错误: 请提供视频链接或使用 --json 指定搜索结果文件')
+        sys.exit(1)
+
+    if json_path and video_urls:
+        print('错误: 视频链接和 --json 不可同时使用')
+        sys.exit(1)
+
+    if json_path:
+        video_urls = _load_urls_from_json(json_path, args.index)
+
     model_name = args.model
     if not model_name:
         model_name = get_default_model()
         if not model_name:
             print('错误: 未配置默认模型，请使用 --model 指定模型或 model-set-default 设置默认模型')
             sys.exit(1)
-    
-    # 静态预检：API Key 是否存在
+
     if not _check_model_api_key(model_name):
         sys.exit(1)
-    
-    # 一键从 argparse namespace 生成 ProcessConfig（quality、format 等自动处理）
+
     cfg = ProcessConfig(**vars(args))
-    
-    # 构建任务列表
+
     items = []
     for url in video_urls:
         platform = args.platform or detect_platform(url)
@@ -291,9 +310,43 @@ def process_video_cli(args):
             continue
         task_id = extract_video_id(url, platform)
         items.append((url, platform, task_id, task_id))
-    
+
     _process_tasks(items, cfg, model_name, args.output_dir)
     _show_shortcut_process_prompt()
+
+
+def _load_urls_from_json(json_path: str, indices: list[int] | None = None) -> list[str]:
+    """从 search 结果 JSON 中读取链接列表"""
+    if not os.path.exists(json_path):
+        print(f"错误: 文件不存在: {json_path}")
+        sys.exit(1)
+
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"错误: JSON 解析失败: {e}")
+        sys.exit(1)
+
+    results = data.get("results", [])
+    if not results:
+        print("错误: JSON 中无搜索结果")
+        sys.exit(1)
+
+    if indices:
+        index_set = set(indices)
+        selected = [r for r in results if r.get("index") in index_set]
+        not_found = index_set - {r.get("index") for r in results}
+        if not_found:
+            print(f"警告: 序号 {sorted(not_found)} 不在搜索结果中")
+        if not selected:
+            print("错误: 指定的序号无匹配结果")
+            sys.exit(1)
+        print(f"从 JSON 选择了 {len(selected)} 个视频（共 {len(results)} 条结果）")
+        return [r["link"] for r in selected]
+
+    print(f"从 JSON 加载全部 {len(results)} 个视频链接")
+    return [r["link"] for r in results]
 
 
 def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir: str | None = None, batch_name: str | None = None):
@@ -426,8 +479,9 @@ def _format_duration(seconds):
 
 
 def search_videos_cli(args):
-    """搜索视频 → 交互选择 → 串行批量生成笔记"""
+    """搜索视频并保存结果为 JSON"""
     from app.services.searcher import search as searcher
+    from datetime import datetime
 
     platform = args.platform or "bilibili"
     keyword = args.keyword
@@ -435,13 +489,11 @@ def search_videos_cli(args):
     print(f"搜索: {keyword}  平台: {platform}")
     print("-" * 60)
 
-    # 1. 搜索
     items = searcher(keyword, platform=platform)
     if not items:
         print("未找到相关视频")
         return
 
-    # 2. 展示结果
     print(f"搜索到 {len(items)} 条结果：\n")
     for i, item in enumerate(items, 1):
         parts = [f"{i}. {item['title']}"]
@@ -458,46 +510,35 @@ def search_videos_cli(args):
             parts.append("  ".join(stats))
         print("  ".join(parts))
 
-    # 3. 交互选择
-    print(f"\n输入序号列表（如 1 2 4）以执行，q 退出：")
-    user_input = input("> ").strip()
-    if user_input.lower() == 'q':
-        print("退出")
-        return
+    search_result = {
+        "meta": {
+            "keyword": keyword,
+            "platform": platform,
+            "searched_at": datetime.now().isoformat(timespec="seconds"),
+        },
+        "results": [
+            {"index": i + 1, **item}
+            for i, item in enumerate(items)
+        ],
+    }
 
-    try:
-        indices = [int(x) for x in user_input.split()]
-        selected = [items[i - 1] for i in indices if 1 <= i <= len(items)]
-    except (ValueError, IndexError):
-        print("输入格式错误")
-        return
+    output_dir = args.output_dir or os.path.join(
+        os.path.expanduser("~"), ".bilinote", "output", "search_result"
+    )
+    os.makedirs(output_dir, exist_ok=True)
 
-    if not selected:
-        print("未选择任何视频")
-        return
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    safe_keyword = re.sub(r'[^\w\s\u4e00-\u9fff]', '', keyword).strip().replace(' ', '_')[:30]
+    filename = f"{timestamp}_{safe_keyword}.json"
+    json_path = os.path.join(output_dir, filename)
 
-    # 4. 默认模型
-    model_name = args.model or get_default_model()
-    if not model_name:
-        print("未配置默认模型，请先 --model-set-default")
-        return
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump(search_result, f, ensure_ascii=False, indent=2)
 
-    # 静态预检：API Key 是否存在
-    if not _check_model_api_key(model_name):
-        return
-
-    # 5. 准备任务列表并统一处理
-    cfg = ProcessConfig(**vars(args))
-    
-    task_items = []
-    for item in selected:
-        url = item['link']
-        detected_platform = detect_platform(url) or platform
-        task_id = extract_video_id(url, detected_platform)
-        title = item.get('title', task_id)
-        task_items.append((url, detected_platform, task_id, title))
-    
-    _process_tasks(task_items, cfg, model_name, args.output_dir, batch_name=keyword)
+    print(f"\n搜索结果已保存至: {json_path}")
+    print(f"\n使用 process 命令处理搜索结果：")
+    print(f"  bilinote process --json \"{json_path}\"")
+    print(f"  bilinote process --json \"{json_path}\" --index 1 2 3")
 
 
 def list_models():
