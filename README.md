@@ -66,10 +66,11 @@ bilinote process "<url>" --screenshot --link --style 学术风
 bilinote process "<url>" --video-understanding --model gpt-4o
 
 # 自定义输出目录
-bilinote process "<url>" --output-dir ./notes/
+bilinote process "<url>" --output-dir <dir>
 
-# 搜索视频
-bilinote search "Python 教程" --platform bilibili
+# 搜索视频（结果保存为 json）
+bilinote search "Python 教程" --platform bilibili --output-dir <dir>
+bilinote process --json "<search_result.json>"  --index 2 3 8
 
 # 其他命令
 bilinote model-list            # 列出可用模型
@@ -96,7 +97,7 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 | 命令 | 说明 |
 |------|------|
 | `process <url>` | 处理视频生成笔记 |
-| `search <keyword>` | 搜索视频并批量生成 |
+| `search <keyword>` | 并保存结果为 JSON |
 | `model-list` | 列出可用模型 |
 | `model-set-default <model>` | 设置默认模型 |
 | `config set <key> <value>` | 设置密钥 |
@@ -115,6 +116,8 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 | `--style` | 笔记风格：学术风、口语风等 |
 | `--video-understanding` | 启用多模态理解 |
 | `--output-dir` | 输出目录路径 |
+| `--json` | 处理 json 文件的路径 |
+| `--index` |  处理 json 文件中的链接序号 |
 
 ## 【指南】提取 Safari Cookie
 
