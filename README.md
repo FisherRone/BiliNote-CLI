@@ -110,14 +110,26 @@ bilinote install-shortcut # 安装 macOS 快捷指令（推荐）
 | 参数 | 说明 |
 |------|------|
 | `--model` | AI 模型，如 `deepseek-chat`, `gpt-4o` |
-| `--quality` | 音频质量：`fast`, `medium`, `slow` |
 | `--screenshot` | 插入视频截图 |
 | `--link` | 插入视频跳转链接 |
-| `--style` | 笔记风格：学术风、口语风等 |
-| `--video-understanding` | 启用多模态理解 |
+| `--style` | 笔记风格|
 | `--output-dir` | 输出目录路径 |
 | `--json` | 处理 json 文件的路径 |
 | `--index` |  处理 json 文件中的链接序号 |
+
+### 笔记风格参数的可选值
+
+| 可选值 | 说明 |
+|------|------|
+| `minimal` | 精简|
+| `detailed` | 详细 |
+| `tutorial` | 教程 |
+| `xiaohongshu` | 小红书风 |
+| `academic` | 学术风 |
+| `life_journal` | 生活日记 |
+| `task_oriented` | 任务导向 |
+| `business` | 业务导向 |
+| `meeting_minutes` | 会议纪要 |
 
 ## 【指南】提取 Safari Cookie
 
