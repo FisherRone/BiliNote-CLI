@@ -169,6 +169,8 @@ def main():
                        help='搜索平台（默认 bilibili）')
     search_parser.add_argument('--output-dir', default=None,
                        help='搜索结果保存目录（默认 ~/.bilinote/output/search_result）')
+    search_parser.add_argument('--limit', type=int, default=20,
+                       help='搜索结果数量上限（默认 20）')
     
     # status 子命令 - 查询任务状态
     status_parser = subparsers.add_parser('status', help='查询任务状态')
@@ -489,7 +491,7 @@ def search_videos_cli(args):
     print(f"搜索: {keyword}  平台: {platform}")
     print("-" * 60)
 
-    items = searcher(keyword, platform=platform)
+    items = searcher(keyword, platform=platform, limit=args.limit)
     if not items:
         print("未找到相关视频")
         return

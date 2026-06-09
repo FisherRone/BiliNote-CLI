@@ -45,7 +45,9 @@ class PathManager:
     │   ├── state/              # 任务状态
     │   └── resources/          # 资源文件（字体等）
     ├── config/                 # 用户可写配置（模型等）
-    └── logs/
+
+    日志目录（系统标准路径，沙箱安全）:
+    ~/Library/Logs/bilinote-cli/
 
     只读目录（随源码分发）:
     ├── src/config/             # 内置配置
@@ -73,8 +75,8 @@ class PathManager:
         self.state_dir = self._ensure_dir(os.path.join(self.data_dir, "state"))
         self.resources_dir = self._ensure_dir(os.path.join(self.data_dir, "resources"))
 
-        # 日志目录
-        self.logs_dir = self._ensure_dir(os.path.join(self.base_dir, "logs"))
+        # 日志目录（使用系统标准路径，避免沙箱权限问题）
+        self.logs_dir = self._ensure_dir(os.path.join(os.path.expanduser("~"), "Library", "Logs", "bilinote-cli"))
 
         # 用户可写配置目录
         self.user_config_dir = self._ensure_dir(os.path.join(self.base_dir, "config"))

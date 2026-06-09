@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENT.md
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
@@ -64,9 +64,30 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
-## 5. Project-associated Notes
+# Project-associated Notes
+
+1. 本项目由 UV 管理。
+2. 本项目的根目录为 /Users/rongziyu/Documents/📝projects/BiliNote/BiliNote-CLI，所有操作需在此目录内运行。
+
+## uv 操作
+
+安装包：uv add
+
 
 ### 运行临时 Python 代码
 ```bash
 uv run python -c "print('import yt_dlp;Hello from uv')"
 ```
+
+## 查看文档
+| 方法 | 能否执行 | 经验 |
+|------|---------|------|
+| `help()` / `dir()` | ✅ 可执行 | 对 yt-dlp 这类大库，`help()` 输出太长不实用；`dir()` 列方法名还行，但看不出参数含义 |
+| `inspect.getsource()` | ✅ **最实用** | 直接看源码，能精确找到参数定义和行为逻辑，比任何文档都准 |
+| `__doc__` | ✅ 可执行 | yt-dlp 的模块级 `__doc__` 为空，类级文档也不完整，价值有限 |
+| `__file__` | ✅ 可执行 | 能定位安装路径，方便进一步看源码文件 |
+| `pydoc` 本地服务 | ✅ 可执行 | 但不如 `inspect.getsource()` 直接，且需要开浏览器 |
+| `pip show` / `uv pip show` | ✅ 可执行 | 能拿到 Home-page，但 yt-dlp 的文档主要在 GitHub README |
+| WebSearch | ✅ 可执行 | 找官方 README 和第三方翻译文档很快，但信息可能过时或不完整 |
+
+**结论**：对于 Python 库的参数确认，**`inspect.getsource()` + 正则搜索** 是最高效的方式，比查文档更准确。WebSearch 适合找概述和用法示例。
