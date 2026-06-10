@@ -702,16 +702,21 @@ def check_cmd():
         print(f"  {status}  {key:25s}  {desc}")
 
     # ── 3. Cookie 配置状态 ───────────────────────────
+    from app.utils.cookie_helper import check_bilibili_cookie
     print(f"Cookie 配置状态:\n")
     cookie_keys = {"BILIBILI_COOKIE": "B站", "DOUYIN_COOKIE": "抖音", "KUAISHOU_COOKIE": "快手"}
     for key, label in cookie_keys.items():
         cookie_value = get_secret(key)
         if cookie_value:
-            has_sessdata = "SESSDATA" in cookie_value if key == "BILIBILI_COOKIE" else None
-            if key == "BILIBILI_COOKIE" and has_sessdata:
-                print(f"  ✓ 已配置  {key:25s}  {label}（含 SESSDATA）")
-            elif key == "BILIBILI_COOKIE" and not has_sessdata:
-                print(f"  ⚠ 已配置  {key:25s}  {label}（缺少 SESSDATA，可能无法获取字幕）")
+            if key == "BILIBILI_COOKIE":
+                has_sessdata = "SESSDATA" in cookie_value
+                if not has_sessdata:
+                    print(f"  ⚠ 已配置  {key:25s}  {label}（缺少 SESSDATA，可能无法获取字幕）")
+                else:
+                    # 请求 nav 接口验证 cookie 有效性
+                    valid, detail = check_bilibili_cookie(cookie_value)
+                    icon = "✓" if valid else "✗"
+                    print(f"  {icon} 已配置  {key:25s}  {label}（{detail}）")
             else:
                 print(f"  ✓ 已配置  {key:25s}  {label}")
         else:
