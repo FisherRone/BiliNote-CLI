@@ -1,5 +1,4 @@
 import json
-import logging
 from dataclasses import asdict
 from pathlib import Path
 from typing import Optional, Union
@@ -7,9 +6,10 @@ from typing import Optional, Union
 from app.enmus.task_status_enums import TaskStatus
 from app.models.audio_model import AudioDownloadResult
 from app.models.transcriber_model import TranscriptResult, TranscriptSegment
+from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 path_manager = get_path_manager()
 
 

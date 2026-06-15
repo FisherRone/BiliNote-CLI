@@ -1,12 +1,12 @@
-import logging
 from pathlib import Path
 from typing import List, Optional
 
+from app.utils.logger import get_logger
 from app.utils.note_helper import replace_content_markers
 from app.utils.screenshot_marker import extract_screenshot_timestamps
 from app.utils.video_helper import generate_screenshot
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PostProcessor:

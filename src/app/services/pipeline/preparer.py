@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -18,11 +17,12 @@ from app.services.cache.task_cache import TaskCache
 from app.services.constant import SUPPORT_PLATFORM_MAP
 from app.transcriber.base import Transcriber
 from app.transcriber.transcriber_provider import get_transcriber_with_fallback
+from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 from app.utils.video_reader import VideoReader
 from ffmpeg_helper import ensure_ffmpeg_or_raise
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 path_manager = get_path_manager()
 
 

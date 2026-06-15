@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Optional
 
@@ -13,9 +12,10 @@ from app.models.notes_model import NoteResult
 from app.models.pipeline_model import PreparedTask
 from app.services.postprocessing import PostProcessor
 from app.utils.note_helper import prepend_source_link
+from app.utils.logger import get_logger
 from config.model_config_manager import get_model_config
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class AIProcessor:
