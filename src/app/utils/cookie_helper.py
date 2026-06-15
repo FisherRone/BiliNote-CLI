@@ -43,7 +43,7 @@ def check_bilibili_cookie(cookie_str: str) -> Tuple[bool, str]:
         if data.get("code") == 0 and data.get("data", {}).get("isLogin"):
             uname = data["data"].get("uname", "")
             vip_type = data["data"].get("vipType", 0)
-            vip_label = {0: "无", 1: "月度大会员", 2: "年度大会员"}.get(vip_type, "未知")
+            vip_label = {0: "无大会员", 1: "月度大会员", 2: "年度大会员"}.get(vip_type, "未知")
             return True, f"有效（{uname}，{vip_label}）"
         else:
             message = data.get("message", "未知错误")
