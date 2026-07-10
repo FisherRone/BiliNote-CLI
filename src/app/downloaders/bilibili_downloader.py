@@ -1,6 +1,5 @@
 import os
 import json
-import logging
 import tempfile
 from abc import ABC
 from typing import Union, Optional, List
@@ -11,11 +10,12 @@ import yt_dlp
 from app.downloaders.base import Downloader, DownloadQuality, QUALITY_MAP
 from app.models.notes_model import AudioDownloadResult
 from app.models.transcriber_model import TranscriptResult, TranscriptSegment
+from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 from app.utils.url_parser import extract_video_id
 from app.utils.cookie_helper import get_cookie
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _cookie_string_to_file(cookie_str: str, domain: str = ".bilibili.com") -> str:

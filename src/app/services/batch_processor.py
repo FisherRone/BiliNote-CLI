@@ -1,15 +1,15 @@
 """批量处理器 - 统一管理批量笔记生成任务"""
 
-import logging
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
+from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class BatchResult:

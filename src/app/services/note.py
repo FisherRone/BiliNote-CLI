@@ -1,4 +1,3 @@
-import logging
 from typing import List, Optional, Union
 
 from pydantic import HttpUrl
@@ -11,10 +10,11 @@ from app.models.process_config import ProcessConfig
 from app.services.cache.task_cache import TaskCache
 from app.services.pipeline.ai_processor import AIProcessor
 from app.services.pipeline.preparer import TaskPreparer
+from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 from app.config_manager import get_config_manager
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 config_mgr = get_config_manager()
 path_manager = get_path_manager()

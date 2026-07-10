@@ -4,11 +4,12 @@ Bilibili: bilibili_api (search.search_by_type)
 YouTube: yt-dlp (ytsearch)
 """
 
-import logging
 import re
 from typing import List, Dict
 
-logger = logging.getLogger(__name__)
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def search(keyword: str, platform: str = "bilibili", limit: int = 20) -> List[Dict]:
