@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- 支持在 config.yaml 中配置默认笔记保存目录（`output.default_dir`），永久生效。
+
 ## [0.1.4] - 2026-06-15
 ### Add
 - bilinote check 命令加入 cookie 有效性检查的功能。

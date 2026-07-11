@@ -44,6 +44,10 @@ bilinote config list
 其他配置在 `~/.bilinote/config.yaml`：
 - windows： `C:\Users\<user_name>\.bilinote\config.yaml`
 ```yaml
+output:
+  default_dir: ""      # 默认笔记保存目录（留空则使用 ~/.bilinote/data/output/notes/）
+                       # 示例: default_dir: "~/Documents/Notes"
+
 transcriber:
   default_type: "bcut" # 默认音频转写器
   whisper_model_size: "base"

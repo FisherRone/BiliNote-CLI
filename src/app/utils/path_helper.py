@@ -29,6 +29,15 @@ def _get_hf_cache_dir() -> str:
     return os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub")
 
 
+def _read_config_default_output_dir() -> str:
+    """从 config.yaml 读取 output.default_dir（安全导入，避免循环依赖）"""
+    try:
+        from app.config_manager import get_config_manager
+        return get_config_manager().get("output.default_dir", "")
+    except Exception:
+        return ""
+
+
 class PathManager:
     """
     统一管理项目目录结构
@@ -70,7 +79,14 @@ class PathManager:
         self.cache_transcript_dir = self._ensure_dir(os.path.join(self.cache_dir, "transcript"))
         self.cache_audio_meta_dir = self._ensure_dir(os.path.join(self.cache_dir, "audio_meta"))
         self.output_dir = self._ensure_dir(os.path.join(self.data_dir, "output"))
-        self.output_notes_dir = self._ensure_dir(os.path.join(self.output_dir, "notes"))
+
+        # 笔记输出目录：优先使用 config.yaml 中的 output.default_dir
+        custom_output = _read_config_default_output_dir()
+        if custom_output:
+            self.output_notes_dir = self._ensure_dir(os.path.expanduser(custom_output))
+        else:
+            self.output_notes_dir = self._ensure_dir(os.path.join(self.output_dir, "notes"))
+
         self.temp_dir = self._ensure_dir(os.path.join(self.data_dir, "temp"))
         self.state_dir = self._ensure_dir(os.path.join(self.data_dir, "state"))
         self.resources_dir = self._ensure_dir(os.path.join(self.data_dir, "resources"))

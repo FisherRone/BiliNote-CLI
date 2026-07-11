@@ -524,8 +524,9 @@ def search_videos_cli(args):
         ],
     }
 
+    path_manager = get_path_manager()
     output_dir = args.output_dir or os.path.join(
-        os.path.expanduser("~"), ".bilinote", "output", "search_result"
+        path_manager.output_notes_dir, "search_result"
     )
     os.makedirs(output_dir, exist_ok=True)
 
