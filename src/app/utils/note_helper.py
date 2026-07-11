@@ -135,6 +135,8 @@ def append_top_comments(markdown: str | None, comments: list) -> str | None:
         message = c.message
         if len(message) > 80:
             message = message[:80] + "..."
+        # 将评论内部的换行符替换为 "\n>"，确保每行都有引用前缀
+        message = message.replace("\n", "\n>")
         block = f">{c.uname}（LV{c.level}）：\n>{message}\n>👍 {c.like_count}"
         blocks.append(block)
 
