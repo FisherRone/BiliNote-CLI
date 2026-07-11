@@ -382,11 +382,18 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir:
             )
             
             if result and result.markdown:
-                task_id = task_id or "unknown"
+                # 计算笔记保存路径（与 AIProcessor._resolve_output_path 逻辑一致）
                 path_manager = get_path_manager()
-                output_file = path_manager.get_note_output_path(task_id)
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(result.markdown)
+                output_file = path_manager.get_note_output_path(task_id or "unknown")
+                if platform == "bilibili" and result.audio_meta:
+                    raw_info = result.audio_meta.raw_info or {}
+                    _uploader = raw_info.get("uploader", "")
+                    _title = raw_info.get("title", "")
+                    _vid = result.audio_meta.video_id
+                    if _uploader and _title and _vid:
+                        from app.utils.bilibili_meta import sanitize_filename
+                        safe_name = sanitize_filename(f"{_uploader} - {_title} - {_vid}")
+                        output_file = os.path.join(path_manager.output_notes_dir, f"{safe_name}.md")
                 
                 print(f"\n{'='*60}")
                 print(f"✓ 笔记生成成功！")
