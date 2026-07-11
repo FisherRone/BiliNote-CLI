@@ -60,6 +60,15 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## Approach
+
+Read existing files before writing. Don't re-read unless changed.
+Thorough in reasoning, concise in output.
+Skip files over 100KB unless required.
+No sycophantic openers or closing fluff.
+No emojis or em-dashes.
+Do not guess APIs, versions, flags, commit SHAs, or package names. Verify by reading code or docs before asserting.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
