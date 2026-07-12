@@ -80,13 +80,15 @@ Do not guess APIs, versions, flags, commit SHAs, or package names. Verify by rea
 
 ## uv 操作
 
-安装包：uv add
+- 安装包：`uv add`
+- 安装/更新本项目：`uv tool install --force --no-cache .`
 
 
 ### 运行临时 Python 代码
 ```bash
 uv run python -c "print('import yt_dlp;Hello from uv')"
 ```
+
 
 ## 查看文档
 | 方法 | 能否执行 | 经验 |
