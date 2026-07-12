@@ -82,6 +82,9 @@ def prepend_video_meta(markdown: str | None, raw_info: dict) -> str | None:
 
     if description and len(description) > 200:
         description = description[:200] + "..."
+    # 简介内部可能有换行符，确保每行都有引用前缀
+    if description:
+        description = description.replace("\n", "\n> ")
 
     from app.utils.bilibili_meta import format_number
 

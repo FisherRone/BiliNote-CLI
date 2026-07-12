@@ -90,7 +90,7 @@ class AIProcessor:
     def _resolve_output_path(prepared: PreparedTask) -> str:
         """从视频元数据计算最终笔记文件路径。
 
-        B 站视频使用 {UP主} - {标题} - {BV号}.md 格式，
+        B 站视频使用 {标题} - {UP主} - {BV号}.md 格式，
         其他平台或非 B 站视频回退到 prepared.output_path 或默认路径。
         """
         if prepared.platform == "bilibili" and prepared.audio_meta:
@@ -101,7 +101,7 @@ class AIProcessor:
             if uploader and title and video_id:
                 from app.utils.bilibili_meta import sanitize_filename
                 from app.utils.path_helper import get_path_manager
-                safe_name = sanitize_filename(f"{uploader} - {title} - {video_id}")
+                safe_name = sanitize_filename(f"{title} - {uploader} - {video_id}")
                 return os.path.join(get_path_manager().output_notes_dir, f"{safe_name}.md")
 
         if prepared.output_path:
