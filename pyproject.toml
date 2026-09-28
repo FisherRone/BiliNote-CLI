@@ -24,13 +24,13 @@ dependencies = [
 ]
 
 [project.scripts]
-bilinote = "src.cli:main"
+bilinote = "app.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/app", "src/config"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"BiliNote.shortcut" = "src/BiliNote.shortcut"
+"BiliNote.shortcut" = "app/BiliNote.shortcut"
 
 [dependency-groups]
 dev = [
@@ -41,4 +41,7 @@ dev = [
 ]
 
 [tool.deptry.per_rule_ignores]
+# app/config 为本项目一方代码包；ffmpeg_helper 为 src 内本地模块
 DEP001 = ["app", "config", "ffmpeg_helper"]
+# editable 安装元数据未将 app/config 映射到本项目，被误判为传递依赖
+DEP003 = ["app", "config"]

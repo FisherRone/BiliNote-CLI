@@ -4,9 +4,9 @@ import json
 import os
 
 from app.gpt.provider.OpenAI_compatible_provider import OpenAICompatibleProvider
+from app.utils.ffmpeg_helper import check_ffmpeg_exists
 from app.utils.path_helper import get_path_manager
 from config.model_config_manager import get_model_config
-from ffmpeg_helper import check_ffmpeg_exists
 
 from .console import print_separator
 

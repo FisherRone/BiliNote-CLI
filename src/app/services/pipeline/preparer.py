@@ -20,7 +20,7 @@ from app.transcriber.transcriber_provider import get_transcriber_with_fallback
 from app.utils.logger import get_logger
 from app.utils.path_helper import get_path_manager
 from app.utils.video_reader import VideoReader
-from ffmpeg_helper import ensure_ffmpeg_or_raise
+from app.utils.ffmpeg_helper import ensure_ffmpeg_or_raise
 
 logger = get_logger(__name__)
 path_manager = get_path_manager()
