@@ -19,9 +19,6 @@ logger = get_logger(__name__)
 config_mgr = get_config_manager()
 path_manager = get_path_manager()
 
-API_BASE_URL = config_mgr.get("api_base_url", "http://localhost")
-BACKEND_PORT = config_mgr.get("backend_port", "8483")
-
 IMAGE_OUTPUT_DIR = path_manager.get_temp_dir("", "screenshots")
 IMAGE_BASE_URL = config_mgr.get("image_base_url", "/static/screenshots")
 

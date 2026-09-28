@@ -90,7 +90,7 @@ def get_model_config(model_id: str) -> Optional[Dict]:
     
     # 查找模型配置
     if model_id_lower not in MODELS:
-        logger.error(f"未知的模型: {model_id}，请在 app/config/model_config_manager.py 的 MODELS 字典中添加")
+        logger.error(f"未知的模型: {model_id}，请在 src/config/model_config_manager.py 的 MODELS 字典中添加")
         return None
     
     template = MODELS[model_id_lower]

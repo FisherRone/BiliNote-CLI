@@ -6,10 +6,6 @@ from typing import Optional
 from app.downloaders.base import Downloader
 from app.enmus.note_enums import DownloadQuality
 from app.models.audio_model import AudioDownloadResult
-import os
-import subprocess
-
-from app.utils.video_helper import save_cover_to_static
 
 
 class LocalDownloader(Downloader, ABC):
@@ -120,7 +116,7 @@ class LocalDownloader(Downloader, ABC):
         print(title, file_name,video_url)
         file_path=self.convert_to_mp3(video_url)
         cover_path = self.extract_cover(video_url)
-        cover_url = save_cover_to_static(cover_path)
+        cover_url = cover_path
 
         print('file——path',file_path)
         return AudioDownloadResult(

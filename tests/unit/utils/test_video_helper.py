@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
-from app.utils.video_helper import generate_screenshot, save_cover_to_static
+from app.utils.video_helper import generate_screenshot
 
 
 class TestGenerateScreenshot(unittest.TestCase):
@@ -70,66 +70,6 @@ class TestGenerateScreenshot(unittest.TestCase):
 
         # 仍然返回路径
         self.assertTrue(result.endswith(".jpg"))
-
-
-class TestSaveCoverToStatic(unittest.TestCase):
-    """测试封面保存功能"""
-
-    def setUp(self):
-        """每个测试前创建临时目录"""
-        self.temp_dir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.temp_dir)
-
-        # 创建模拟封面文件
-        self.cover_path = os.path.join(self.temp_dir, "test_cover.jpg")
-        with open(self.cover_path, "w") as f:
-            f.write("fake image data")
-
-    def tearDown(self):
-        """每个测试后清理"""
-        import shutil
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-
-    def test_save_cover_copies_file(self):
-        """测试复制封面文件到 static 目录"""
-        with patch('app.utils.video_helper.BACKEND_BASE_URL', 'http://localhost:8483'):
-            result = save_cover_to_static(self.cover_path)
-
-            # 验证文件被复制
-            static_path = os.path.join(self.temp_dir, "static", "cover", "test_cover.jpg")
-            self.assertTrue(os.path.exists(static_path))
-
-    def test_save_cover_returns_url(self):
-        """测试返回可访问的 URL"""
-        with patch('app.utils.video_helper.BACKEND_BASE_URL', 'http://localhost:8483'):
-            result = save_cover_to_static(self.cover_path)
-
-            # 验证返回 URL 格式
-            self.assertIn("http://localhost:8483", result)
-            self.assertIn("/static/cover/test_cover.jpg", result)
-
-    def test_save_cover_custom_subfolder(self):
-        """测试自定义子目录"""
-        with patch('app.utils.video_helper.BACKEND_BASE_URL', 'http://localhost:8483'):
-            result = save_cover_to_static(self.cover_path, subfolder="thumbnails")
-
-            # 验证文件在自定义子目录中
-            custom_path = os.path.join(self.temp_dir, "static", "thumbnails", "test_cover.jpg")
-            self.assertTrue(os.path.exists(custom_path))
-            self.assertIn("/static/thumbnails/test_cover.jpg", result)
-
-    def test_save_cover_preserves_filename(self):
-        """测试保留原始文件名"""
-        with patch('app.utils.video_helper.BACKEND_BASE_URL', 'http://localhost:8483'):
-            custom_cover = os.path.join(self.temp_dir, "my_custom_cover.png")
-            with open(custom_cover, "w") as f:
-                f.write("fake image data")
-
-            result = save_cover_to_static(custom_cover)
-
-            self.assertIn("my_custom_cover.png", result)
 
 
 if __name__ == "__main__":
