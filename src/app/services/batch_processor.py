@@ -125,7 +125,7 @@ class AsyncBatchProcessor:
                     if prepared is None:
                         fail_count += 1
                         self.results.append(BatchResult(task_id, False, "准备阶段失败"))
-                        print(f"  ✗ 准备失败")
+                        print("  ✗ 准备失败")
                         print()
                         continue
 
@@ -175,7 +175,7 @@ class AsyncBatchProcessor:
 
         # 打印摘要
         print(f"\n{'=' * 60}")
-        print(f"批量处理完成!")
+        print("批量处理完成!")
         print(f"  成功: {success_count}")
         print(f"  失败: {fail_count}")
         print(f"  总计: {total}")

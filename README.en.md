@@ -3,8 +3,8 @@
 
 AI Video Note Generator - Let AI Take Notes for Your Videos
 
-> **Project Note**: This project is forked from [BiliNote](https://github.com/JefferyHcool/BiliNote) and heavily refactored.  
-> The original project is licensed under MIT, thanks to the outstanding work of the original author Jeffery Huang.
+> **Project Note**: This project is forked from [BiliNote](https://github.com/JefferyHcool/BiliNote) and heavily refactored.
+> Thanks to the original author Jeffery Huang for the outstanding work.
 
 ## Features
 
@@ -18,8 +18,7 @@ Let AI automatically convert videos into markdown notes.
 
 ```bash
 # Install CLI
-cd BiliNote-cli
-uv tool install .
+uv tool install bilinote-cli
 
 # Install FFmpeg (required)
 brew install ffmpeg  # macOS
@@ -40,27 +39,25 @@ bilinote config set BILIBILI_COOKIE "SESSDATA=xxx; ..."
 bilinote config list
 ```
 
-Non-sensitive configuration in `~/.bilinote/config.yaml` (Windows: `C:\Users\<user_name>\.bilinote\config.yaml`):
+Other options live in `~/.bilinote/config.yaml` (Windows: `C:\Users\<user_name>\.bilinote\config.yaml`):
 ```yaml
+output:
+  default_dir: ""      # Default note output directory (empty = ~/.bilinote/data/output/notes/)
+                       # Example: default_dir: "~/Documents/Notes"
+
 transcriber:
   default_type: "bcut" # default audio transcriber
   whisper_model_size: "base"
 ```
-
-### [Tutorial] Extracting Safari Cookies
-
-1. Open Safari's developer mode.
-2. Open the target website in the browser and press F12 (or Cmd+Opt+I) to open Developer Tools.
-3. Switch to the **Network** tab.
-4. Refresh the page, find any request, and **right-click** on it.
-5. Select **Copy** -> **Copy as cURL**.
-6. In your clipboard, you'll see a complete command string; the `-H 'cookie: ...'` part contains all cookies for that site.
 
 ## Usage
 
 ```bash
 # Basic usage
 bilinote process "https://www.bilibili.com/video/BV1mQ9jBcEf4"
+
+# Batch processing
+bilinote process "<url1>" "<url2>"
 
 # With screenshots and links
 bilinote process "<url>" --screenshot --link --style academic
@@ -69,38 +66,18 @@ bilinote process "<url>" --screenshot --link --style academic
 bilinote process "<url>" --video-understanding --model gpt-4o
 
 # Custom output directory
-bilinote process "<url>" --output-dir ./notes/
+bilinote process "<url>" --output-dir <dir>
 
-# Search videos
-bilinote search "Python tutorial" --platform bilibili
+# Search videos (results saved as JSON)
+bilinote search "Python tutorial" --platform bilibili --output-dir <dir>
+bilinote process --json "<search_result.json>" --index 2 3 8
 
 # Other commands
 bilinote model-list            # List available models
 bilinote model-set-default deepseek  # Set default model
+bilinote check                 # Check environment (ffmpeg, LLM availability)
+bilinote install-shortcut      # Install macOS Shortcut (recommended)
 ```
-
-## Command Reference
-
-| Command | Description |
-|---------|-------------|
-| `process <url>` | Process video and generate notes |
-| `search <keyword>` | Search for videos and batch generate |
-| `model-list` | List available models |
-| `model-set-default <model>` | Set default model |
-| `config set <key> <value>` | Set a configuration key |
-| `config list` | Show configuration status |
-
-### process Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `--model` | AI model, e.g., `deepseek-chat`, `gpt-4o` |
-| `--quality` | Audio quality: `fast`, `medium`, `slow` |
-| `--screenshot` | Insert video screenshots |
-| `--link` | Insert video timestamps as jump links |
-| `--style` | Note style: academic, conversational, etc. |
-| `--video-understanding` | Enable multimodal understanding |
-| `--output` | Output file path |
 
 ## Directory Structure
 
@@ -114,6 +91,63 @@ bilinote model-set-default deepseek  # Set default model
 ├── config.yaml        # User configuration ★
 └── logs/
 ```
+
+## Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `process <url>` | Process video and generate notes |
+| `search <keyword>` | Search videos and save results as JSON |
+| `model-list` | List available models |
+| `model-set-default <model>` | Set default model |
+| `config set <key> <value>` | Set a configuration key |
+| `config list` | Show configuration status |
+| `install-shortcut` | Install macOS Shortcut (macOS only) |
+| `check` | Environment check |
+
+### process Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `--model` | AI model, e.g., `deepseek-chat`, `gpt-4o` |
+| `--screenshot` | Insert video screenshots |
+| `--link` | Insert video timestamps as jump links |
+| `--style` | Note style |
+| `--output-dir` | Output directory path |
+| `--json` | Path to a search-result JSON file |
+| `--index` | Select items from the JSON file by index |
+
+### Available note styles
+
+| Value | Description |
+|-------|-------------|
+| `minimal` | Minimal |
+| `detailed` | Detailed |
+| `tutorial` | Tutorial |
+| `xiaohongshu` | Xiaohongshu style |
+| `academic` | Academic |
+| `life_journal` | Life journal |
+| `task_oriented` | Task oriented |
+| `business` | Business |
+| `meeting_minutes` | Meeting minutes |
+
+## [Guide] Extracting Safari Cookies
+
+1. Open Safari's developer mode.
+2. Open the target website in the browser and press F12 (or Cmd+Opt+I) to open Developer Tools.
+3. Switch to the **Network** tab.
+4. Refresh the page, find any request, and **right-click** on it.
+5. Select **Copy** -> **Copy as cURL**.
+6. In your clipboard, you'll see a complete command string; the `-H 'cookie: ...'` part contains all cookies for that site.
+
+## [Guide] One-click Run via macOS Shortcut (macOS only)
+
+**Install the Shortcut**: run `bilinote install-shortcut` in a terminal.
+
+**Usage**:
+1. In your browser, select the video URL in the address bar.
+2. Click the browser app name in the menu bar (top-left of the screen, e.g. "Safari").
+3. Click **Services** -> **BiliNote**.
 
 ## [Guide] Configuring whisper-cpp as Local Audio Transcriber
 

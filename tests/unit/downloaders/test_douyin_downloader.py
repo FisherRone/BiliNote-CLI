@@ -4,9 +4,8 @@
 不实际下载视频，通过 mock 验证参数传递
 """
 
-import os
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # ==================== 配置区 ====================
 # 测试用的视频链接（无需修改，仅用于 mock 测试）

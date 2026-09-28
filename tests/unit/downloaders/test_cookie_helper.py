@@ -1,6 +1,5 @@
 """测试 cookie_helper 模块"""
 
-import os
 import unittest
 from unittest.mock import patch
 

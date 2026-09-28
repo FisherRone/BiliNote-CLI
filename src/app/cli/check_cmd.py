@@ -29,7 +29,7 @@ def check_cmd():
     known = list_known_keys()
     configured = get_configured_keys()
 
-    print(f"API Key 配置状态 (仅 LLM 相关):\n")
+    print("API Key 配置状态 (仅 LLM 相关):\n")
     llm_key_names = {"OPENAI_API_KEY", "DEEPSEEK_API_KEY", "QWEN_API_KEY",
                      "CLAUDE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OLLAMA_API_KEY"}
     for key, desc in known.items():
@@ -40,7 +40,7 @@ def check_cmd():
 
     # ── 3. Cookie 配置状态 ───────────────────────────
     from app.utils.cookie_helper import check_bilibili_cookie
-    print(f"Cookie 配置状态:\n")
+    print("Cookie 配置状态:\n")
     cookie_keys = {"BILIBILI_COOKIE": "B站", "DOUYIN_COOKIE": "抖音", "KUAISHOU_COOKIE": "快手"}
     for key, label in cookie_keys.items():
         cookie_value = get_secret(key)
@@ -62,7 +62,7 @@ def check_cmd():
 
     # ── 4. LLM 连通性测试 ─────────────────────────────
     from config.model_config_manager import MODELS
-    print(f"LLM 连通性测试（仅检查已配置 Key 的模型）:\n")
+    print("LLM 连通性测试（仅检查已配置 Key 的模型）:\n")
     tested = 0
     for model_id in sorted(MODELS.keys()):
         config = get_model_config(model_id, report_missing=False)
@@ -84,10 +84,10 @@ def check_cmd():
 
     if tested == 0:
         print("  (没有已配置 API Key 的模型)\n")
-        print(f"  使用 bilinote config set <KEY> <value> 配置 API Key")
+        print("  使用 bilinote config set <KEY> <value> 配置 API Key")
 
     print_separator(width=50, before=True)
-    print(f"使用 bilinote check 随时复查环境状态\n")
+    print("使用 bilinote check 随时复查环境状态\n")
 
 
 def show_task_status(task_id: str):
@@ -104,9 +104,9 @@ def show_task_status(task_id: str):
             print(f"消息: {status.get('message')}")
 
     if os.path.exists(result_path):
-        print(f"\n✓ 任务已完成，结果已保存")
+        print("\n✓ 任务已完成，结果已保存")
         with open(result_path, 'r', encoding='utf-8') as f:
             result = json.load(f)
         print(f"Markdown 长度: {len(result.get('markdown', ''))} 字符")
     else:
-        print(f"\n任务结果未找到")
+        print("\n任务结果未找到")

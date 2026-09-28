@@ -12,7 +12,7 @@ from app.secret_manager import get_secret
 def get_cookie(platform: str) -> Optional[str]:
     """
     从 keyring 读取指定平台的 Cookie
-    
+
     :param platform: 平台名称 (bilibili, douyin, kuaishou)
     :return: Cookie 字符串或 None
     """
@@ -34,7 +34,7 @@ def check_bilibili_cookie(cookie_str: str) -> Tuple[bool, str]:
             "https://api.bilibili.com/x/web-interface/nav",
             headers={
                 "Cookie": cookie_str,
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",  # noqa: E501
                 "Referer": "https://www.bilibili.com",
             },
             timeout=10,

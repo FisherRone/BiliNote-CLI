@@ -23,8 +23,8 @@ def _check_model_api_key(model_name: str) -> bool:
     config = get_model_config(model_name)
     if not config:
         print(f"\n✗ 模型 \"{model_name}\" 的 API Key 未配置")
-        print(f"  使用 bilinote config set <KEY> <value> 配置")
-        print(f"  使用 bilinote check 查看全部状态")
+        print("  使用 bilinote config set <KEY> <value> 配置")
+        print("  使用 bilinote check 查看全部状态")
         return False
     return True
 
@@ -104,7 +104,8 @@ def _load_urls_from_json(json_path: str, indices: list[int] | None = None) -> li
     return [r["link"] for r in results]
 
 
-def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir: str | None = None, batch_name: str | None = None):
+def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
+                   output_dir: str | None = None, batch_name: str | None = None):
     """统一任务处理入口
 
     单任务：同步串行执行（保留笔记预览打印）
@@ -118,7 +119,7 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir:
     if len(items) == 1:
         url, platform, task_id, title = items[0]
 
-        print(f"开始生成笔记...")
+        print("开始生成笔记...")
         print(f"平台: {platform}")
         print(f"模型: {model_name}")
         print(f"视频: {url}")

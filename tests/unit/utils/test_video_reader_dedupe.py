@@ -2,7 +2,7 @@ import pathlib
 import re
 import tempfile
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from app.utils.video_reader import VideoReader
 

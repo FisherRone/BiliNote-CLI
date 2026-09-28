@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Optional, Union
 
-from app.enmus.task_status_enums import TaskStatus
+from app.enums.task_status_enums import TaskStatus
 from app.models.audio_model import AudioDownloadResult
 from app.models.transcriber_model import TranscriptResult, TranscriptSegment
 from app.utils.logger import get_logger
@@ -40,8 +40,8 @@ class TaskCache:
             try:
                 with status_file.open("w", encoding="utf-8") as f:
                     f.write(f"Error writing status: {str(e)}")
-            except:
-                logger.error(f"写入错误  {e}")
+            except Exception as write_err:
+                logger.error(f"写入错误标记失败: {write_err}")
 
     @staticmethod
     def load_transcript(task_id: str) -> Optional[TranscriptResult]:

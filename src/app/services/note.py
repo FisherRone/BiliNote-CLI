@@ -1,9 +1,8 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pydantic import HttpUrl
 
-from app.enmus.note_enums import DownloadQuality
-from app.enmus.task_status_enums import TaskStatus
+from app.enums.task_status_enums import TaskStatus
 from app.models.notes_model import NoteResult
 from app.models.pipeline_model import PreparedTask
 from app.models.process_config import ProcessConfig

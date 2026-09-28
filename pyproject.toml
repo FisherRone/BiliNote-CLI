@@ -38,6 +38,7 @@ dev = [
     "ipykernel>=7.2.0",
     "pyinstaller>=6.20.0",
     "pytest>=9.0.3",
+    "ruff>=0.16.9",
 ]
 
 [tool.deptry.per_rule_ignores]
@@ -45,3 +46,25 @@ dev = [
 DEP001 = ["app", "config", "ffmpeg_helper"]
 # editable 安装元数据未将 app/config 映射到本项目，被误判为传递依赖
 DEP003 = ["app", "config"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+# 提示词文案保持单行段落，不做换行拆分
+"src/app/gpt/prompt.py" = ["E501"]
+"src/app/gpt/prompt_builder.py" = ["E501"]
+# douyin_helper 为第三方反爬算法（vendored），不强制命名/行长规范
+"src/app/downloaders/douyin_helper/*" = ["E741", "E501"]
+# 测试中先注入 sys.modules 桩再 import 被测模块（E402 为有意为之）
+"tests/**" = ["E402", "E501"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: 需要真实网络与凭据的集成测试（本地显式 -m integration 运行；CI 用 -m \"not integration\" 排除）",
+]

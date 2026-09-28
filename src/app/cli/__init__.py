@@ -137,7 +137,7 @@ def main():
     status_parser.add_argument('task_id', help='任务ID')
 
     # model-list 子命令 - 列出所有模型
-    model_list_parser = subparsers.add_parser('model-list', help='列出所有已配置的模型')
+    subparsers.add_parser('model-list', help='列出所有已配置的模型')
 
     # model-set-default 子命令 - 设置默认模型
     model_set_default_parser = subparsers.add_parser('model-set-default', help='设置默认模型')

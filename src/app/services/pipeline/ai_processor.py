@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 from app.services.cache.task_cache import TaskCache
-from app.enmus.exception import ProviderErrorEnum
-from app.enmus.task_status_enums import TaskStatus
+from app.enums.exception import ProviderErrorEnum
+from app.enums.task_status_enums import TaskStatus
 from app.exceptions.provider import ProviderError
 from app.gpt.base import GPT
 from app.gpt.gpt_factory import GPTFactory

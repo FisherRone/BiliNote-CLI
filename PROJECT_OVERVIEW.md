@@ -85,14 +85,14 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 ### 其他辅助模块
 
-`src/app/enmus/` — 枚举定义：`task_status_enums.py`（`TaskStatus`）、`note_enums.py`（`DownloadQuality`）、`exception.py`（错误码）。
+`src/app/enums/` — 枚举定义：`task_status_enums.py`（`TaskStatus`）、`note_enums.py`（`DownloadQuality`）、`exception.py`（错误码）。
 `src/app/exceptions/` — 自定义异常：`biz_exception.py`（业务异常基类）、`note.py`、`provider.py`。
 `src/app/decorators/` — 装饰器：`timeit.py`（计时）。
 `src/app/utils/ffmpeg_helper.py` — FFmpeg 检测与调用封装。
 
 ### 测试
 
-`tests/` 目录结构与 `src/app/` 对应。`conftest.py` 负责将 `src/` 加入 `sys.path`。`unit/` 下按模块分目录存放单元测试（downloaders、gpt、utils、services、transcriber），`integration/` 存放集成测试（通过环境变量 `RUN_INTEGRATION_TESTS` 门控，默认跳过）。
+`tests/` 目录结构与 `src/app/` 对应。`conftest.py` 负责将 `src/` 加入 `sys.path`。`unit/` 下按模块分目录存放单元测试（downloaders、gpt、utils、services、transcriber、cli），`integration/` 存放集成测试（注册为 pytest `integration` marker，CI 用 `-m "not integration"` 排除）。lint 使用 ruff（E/F/W，配置见 `pyproject.toml`）。
 
 ### 运行时数据目录
 

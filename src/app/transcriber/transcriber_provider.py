@@ -59,14 +59,13 @@ def get_transcriber(transcriber_type: TranscriberType):
     """获取指定类型的转录器实例"""
     if transcriber_type not in TRANSCRIBER_CLASSES:
         raise ValueError(f"未知的转录器类型: {transcriber_type}")
-    
+
     logger.info(f'请求转录器类型: {transcriber_type.value}')
 
-    config = config_manager.get_transcriber_config(transcriber_type.value)
-    
+
     # 构建参数
     kwargs = {}
-    
+
     return _init_transcriber(transcriber_type, **kwargs)
 
 
@@ -74,7 +73,7 @@ def _get_fallback_order() -> List[TranscriberType]:
     """生成 fallback 顺序列表，优先使用用户指定的转写器"""
     # 从配置文件读取 fallback 优先级
     priority_list = config_manager.get_fallback_priority()
-    
+
     # 将字符串列表转为 TranscriberType 枚举
     fallback_priority = []
     for t in priority_list:
@@ -83,41 +82,41 @@ def _get_fallback_order() -> List[TranscriberType]:
         except ValueError:
             logger.warning(f'未知的转写器类型 "{t}"，跳过')
             continue
-    
+
     try:
         preferred_str = config_manager.get("transcriber.default_type")
         preferred_type = TranscriberType(preferred_str)
     except ValueError:
         preferred_type = None
-    
+
     if preferred_type is not None:
         try:
             fallback_priority.remove(preferred_type)
-        except:
+        except ValueError:
             pass
         fallback_priority.insert(0, preferred_type)
-    
+
     return fallback_priority
 
 
 class FallbackTranscriber(Transcriber):
     """带自动 fallback 功能的转写器包装类"""
-    
+
     def __init__(self):
         pass
-    
+
     def transcript(self, file_path: str) -> TranscriptResult:
         """执行转写，失败时自动尝试其他转写器"""
         fallback_order = _get_fallback_order()
         attempted = []
         last_error = None
-        
+
         for t in fallback_order:
             attempted.append(t.value)
             try:
                 transcriber = get_transcriber(t)
                 result = transcriber.transcript(file_path)
-                
+
                 if result and result.segments:
                     logger.info(f"转写成功: {t.value}")
                     return result
@@ -125,7 +124,7 @@ class FallbackTranscriber(Transcriber):
                 last_error = e
                 logger.warning(f"{t.value} 失败: {e}")
                 continue
-        
+
         raise RuntimeError(f"所有转写器失败 (已尝试: {', '.join(attempted)})") from last_error
 
 

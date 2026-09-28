@@ -29,7 +29,7 @@ def _get_default_config() -> str:
 
     template = example_path.read_text(encoding="utf-8")
 
-    
+
 
     # macOS 默认 whisper 模型路径
     if platform.system() == "Darwin":
@@ -240,7 +240,7 @@ class ConfigManager:
         """获取指定转写器的配置，支持环境变量覆盖"""
         config = self.get_config()
         transcriber_config = config.get("transcribers", {}).get(transcriber_type, {})
-        
+
         # 环境变量覆盖 → config.yaml 覆盖
         if transcriber_type == "groq":
             from app.secret_manager import get_secret

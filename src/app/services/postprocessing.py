@@ -27,7 +27,7 @@ class PostProcessor:
         if "screenshot" in formats and video_path:
             try:
                 markdown = self._insert_screenshots(markdown, video_path)
-            except Exception as exc:
+            except Exception:
                 logger.warning("截图插入失败，跳过该步骤")
 
         if "link" in formats and video_id and platform:

@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Optional
 
 from app.downloaders.base import Downloader
-from app.enmus.note_enums import DownloadQuality
+from app.enums.note_enums import DownloadQuality
 from app.models.audio_model import AudioDownloadResult
 
 

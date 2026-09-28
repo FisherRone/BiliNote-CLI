@@ -107,7 +107,7 @@ class TestSearchBilibili(unittest.TestCase):
         results = searcher._search_bilibili("编程", limit=2)
 
         self.assertEqual(len(results), 2)
-        
+
         # 验证第一个结果
         self.assertEqual(results[0]["title"], "Python教程")  # HTML 标签已移除
         self.assertEqual(results[0]["link"], "https://www.bilibili.com/video/BV1xx411c7mD")
@@ -116,7 +116,7 @@ class TestSearchBilibili(unittest.TestCase):
         self.assertEqual(results[0]["favorite_count"], 200)
         self.assertEqual(results[0]["duration"], 630)  # 10*60 + 30
         self.assertEqual(results[0]["author"], "UP主A")
-        
+
         # 验证第二个结果
         self.assertEqual(results[1]["duration"], 5400)  # 1*3600 + 30*60
 
@@ -148,7 +148,7 @@ class TestSearchYoutube(unittest.TestCase):
         mock_ydl = MagicMock()
         mock_yt_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
         mock_yt_class.return_value.__exit__ = MagicMock(return_value=False)
-        
+
         mock_ydl.extract_info.return_value = {
             "entries": [
                 {
@@ -162,10 +162,10 @@ class TestSearchYoutube(unittest.TestCase):
                 }
             ]
         }
-        
+
         from app.services import searcher
         results = searcher._search_youtube("python tutorial", limit=1)
-        
+
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["title"], "Python Tutorial")
         self.assertEqual(results[0]["link"], "https://www.youtube.com/watch?v=abc123")
@@ -179,12 +179,12 @@ class TestSearchYoutube(unittest.TestCase):
         mock_ydl = MagicMock()
         mock_yt_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
         mock_yt_class.return_value.__exit__ = MagicMock(return_value=False)
-        
+
         mock_ydl.extract_info.return_value = {"entries": []}
-        
+
         from app.services import searcher
         results = searcher._search_youtube("不存在的关键词", limit=5)
-        
+
         self.assertEqual(len(results), 0)
 
     @patch("yt_dlp.YoutubeDL")
@@ -193,12 +193,12 @@ class TestSearchYoutube(unittest.TestCase):
         mock_ydl = MagicMock()
         mock_yt_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
         mock_yt_class.return_value.__exit__ = MagicMock(return_value=False)
-        
+
         mock_ydl.extract_info.return_value = {"entries": None}
-        
+
         from app.services import searcher
         results = searcher._search_youtube("test", limit=5)
-        
+
         self.assertEqual(len(results), 0)
 
     @patch("yt_dlp.YoutubeDL")
@@ -207,17 +207,17 @@ class TestSearchYoutube(unittest.TestCase):
         mock_ydl = MagicMock()
         mock_yt_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
         mock_yt_class.return_value.__exit__ = MagicMock(return_value=False)
-        
+
         mock_ydl.extract_info.return_value = {
             "entries": [
                 None,
                 {"title": "Valid Video", "webpage_url": "https://youtube.com/watch?v=xyz", "duration": 300}
             ]
         }
-        
+
         from app.services import searcher
         results = searcher._search_youtube("test", limit=5)
-        
+
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["title"], "Valid Video")
 
@@ -229,9 +229,9 @@ class TestSearchMainFunction(unittest.TestCase):
     def test_search_bilibili_platform(self, mock_bilibili):
         """调用 B站搜索"""
         mock_bilibili.return_value = [{"title": "Test"}]
-        
+
         results = search("python", platform="bilibili", limit=5)
-        
+
         mock_bilibili.assert_called_once_with("python", 5)
         self.assertEqual(len(results), 1)
 
@@ -239,16 +239,16 @@ class TestSearchMainFunction(unittest.TestCase):
     def test_search_youtube_platform(self, mock_youtube):
         """调用 YouTube 搜索"""
         mock_youtube.return_value = [{"title": "Test"}]
-        
+
         results = search("python", platform="youtube", limit=5)
-        
+
         mock_youtube.assert_called_once_with("python", 5)
         self.assertEqual(len(results), 1)
 
     def test_search_unsupported_platform(self):
         """不支持的平台返回空列表"""
         results = search("python", platform="unsupported", limit=5)
-        
+
         self.assertEqual(len(results), 0)
 
     def test_search_default_platform(self):

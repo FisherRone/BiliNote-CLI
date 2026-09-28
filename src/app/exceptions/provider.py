@@ -1,5 +1,5 @@
 # exceptions.py
-from app.enmus.exception import ProviderErrorEnum
+from app.enums.exception import ProviderErrorEnum
 
 
 class ProviderError(Exception):
@@ -7,6 +7,6 @@ class ProviderError(Exception):
         super().__init__(message)
         self.code=code
         self.message = message
-        
-        
+
+
 

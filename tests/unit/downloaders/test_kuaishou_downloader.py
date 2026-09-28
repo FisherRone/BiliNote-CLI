@@ -4,7 +4,6 @@
 不实际下载视频，通过 mock 验证参数传递
 """
 
-import os
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -109,7 +108,7 @@ class TestKuaiShouRunWithCookie(unittest.TestCase):
 
         from app.downloaders.kuaishou_helper.kuaishou import KuaiShou
         ks = KuaiShou()
-        result = ks.run("https://v.kuaishou.com/2vBqX74 测试视频")
+        ks.run("https://v.kuaishou.com/2vBqX74 测试视频")
 
         # Cookie 应该来自环境变量
         self.assertEqual(ks.header["Cookie"], "did=from_env; kpf=PC_WEB")
@@ -128,7 +127,7 @@ class TestKuaiShouRunWithCookie(unittest.TestCase):
             with patch.object(ks, '_extract_kuaishou_link', return_value="https://v.kuaishou.com/test"):
                 with patch.object(ks, 'get_photo_id', return_value="photo123"):
                     with patch.object(ks, 'get_video_details', return_value={"data": {"test": 1}}):
-                        result = ks.run("https://v.kuaishou.com/test 测试")
+                        ks.run("https://v.kuaishou.com/test 测试")
                         self.assertEqual(ks.header["Cookie"], "temp=cookie")
 
 

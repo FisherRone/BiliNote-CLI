@@ -46,15 +46,11 @@ def replace_content_markers(markdown: str, video_id: str, platform: str = 'bilib
         total_seconds = int(mm) * 60 + int(ss)
 
         if platform == 'bilibili':
-            video_id = video_id.replace("_p", "?p=")
-            url = f"https://www.bilibili.com/video/{video_id}&t={total_seconds}"
             parsed_video_id = safe_video_id.replace("_p", "?p=")
             url = f"https://www.bilibili.com/video/{parsed_video_id}&t={total_seconds}"
         elif platform == 'youtube':
-            url = f"https://www.youtube.com/watch?v={video_id}&t={total_seconds}s"
             url = f"https://www.youtube.com/watch?v={safe_video_id}&t={total_seconds}s"
         elif platform == 'douyin':
-            url = f"https://www.douyin.com/video/{video_id}"
             url = f"https://www.douyin.com/video/{safe_video_id}"
             return f"[原片 @ {mm}:{ss}]({url})"
         else:
@@ -97,6 +93,8 @@ def prepend_video_meta(markdown: str | None, raw_info: dict) -> str | None:
         stats_parts.append(f"{format_number(coin_count)} 投币")
     if favorite_count is not None:
         stats_parts.append(f"{format_number(favorite_count)} 收藏")
+    if share_count is not None:
+        stats_parts.append(f"{format_number(share_count)} 分享")
     stats_str = " · ".join(stats_parts) if stats_parts else ""
 
     tag_names = []

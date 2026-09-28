@@ -11,30 +11,30 @@ logger = get_logger(__name__)
 def detect_platform(url: str) -> Optional[str]:
     """
     自动检测视频平台
-    
+
     :param url: 视频链接或文件路径
     :return: 平台名称或 None
     """
     # 本地文件
     if os.path.exists(url):
         return "local"
-    
+
     # B站
     if "bilibili.com" in url or "b23.tv" in url:
         return "bilibili"
-    
+
     # YouTube
     if "youtube.com" in url or "youtu.be" in url:
         return "youtube"
-    
+
     # 抖音
     if "douyin.com" in url or "iesdouyin.com" in url:
         return "douyin"
-    
+
     # 快手
     if "kuaishou.com" in url or "gifshow.com" in url:
         return "kuaishou"
-    
+
     return None
 
 

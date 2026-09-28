@@ -53,11 +53,11 @@ def get_secret(key: str) -> Optional[str]:
     env_val = os.getenv(key)
     if env_val:
         return env_val
-    
+
     # 检查内存缓存
     if key in _secret_cache:
         return _secret_cache[key]
-    
+
     # keyring 回退
     try:
         value = keyring.get_password(SERVICE_NAME, key)

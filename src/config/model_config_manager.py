@@ -111,7 +111,7 @@ def get_model_config(model_id: str, report_missing: bool = True) -> Optional[Dic
     config_base_url = config_mgr.get(f"models.{provider}.base_url")
     base_url = config_base_url or template["base_url"]
     model_name = template["model_name"]
-    
+
     logger.info(f"使用模型配置: {model_id}")
     return {
         "model_id": model_id,
@@ -128,17 +128,17 @@ def get_default_model() -> str:
 def set_default_model(model_id: str) -> bool:
     """
     设置默认模型（写入 config.yaml）
-    
+
     :param model_id: 模型标识符
     :return: 是否设置成功
     """
     global DEFAULT_MODEL
-    
+
     model_id_lower = model_id.lower()
     if model_id_lower not in MODELS:
         logger.error(f"无法设置默认模型：未知的模型 {model_id}")
         return False
-    
+
     DEFAULT_MODEL = model_id_lower
     # 写入 config.yaml
     config_mgr = get_config_manager()
@@ -155,23 +155,23 @@ def list_available_models() -> list:
 def add_model(model_id: str, api_key_env: str, base_url: str, model_name: str):
     """
     添加模型配置（写入用户配置）
-    
+
     :param model_id: 模型标识符（如 my-custom-model）
     :param api_key_env: API Key 环境变量名（如 MY_API_KEY）
     :param base_url: API 基础 URL
     :param model_name: 实际模型名称
     """
     global MODELS
-    
+
     model_id_lower = model_id.lower()
-    
+
     # 添加到模型配置
     MODELS[model_id_lower] = {
         "api_key_env": api_key_env,
         "base_url": base_url,
         "model_name": model_name
     }
-    
+
     # 写入用户配置
     user_models = _load_json(_user_models_file())
     user_models[model_id_lower] = {
@@ -180,25 +180,25 @@ def add_model(model_id: str, api_key_env: str, base_url: str, model_name: str):
         "model_name": model_name
     }
     _save_user_config(user_models)
-    
+
     logger.info(f"已添加模型配置: {model_id}")
 
 
 def remove_model(model_id: str) -> bool:
     """
     删除模型配置
-    
+
     :param model_id: 模型标识符
     :return: 是否删除成功
     """
     global MODELS, DEFAULT_MODEL
-    
+
     model_id_lower = model_id.lower()
-    
+
     if model_id_lower not in MODELS:
         logger.error(f"无法删除模型：未知的模型 {model_id}")
         return False
-    
+
     # 从内存中删除
     del MODELS[model_id_lower]
 
@@ -215,6 +215,6 @@ def remove_model(model_id: str) -> bool:
     if model_id_lower not in user_models["_removed"]:
         user_models["_removed"].append(model_id_lower)
     _save_user_config(user_models)
-    
+
     logger.info(f"已删除模型配置: {model_id}")
     return True

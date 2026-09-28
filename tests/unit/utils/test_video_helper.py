@@ -24,7 +24,7 @@ class TestGenerateScreenshot(unittest.TestCase):
         mock_run.return_value = MagicMock(returncode=0)
 
         output_dir = os.path.join(self.temp_dir, "screenshots")
-        result = generate_screenshot("/path/to/video.mp4", output_dir, 60, 1)
+        generate_screenshot("/path/to/video.mp4", output_dir, 60, 1)
 
         # 验证 ffmpeg 被调用
         mock_run.assert_called_once()

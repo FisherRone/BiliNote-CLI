@@ -5,7 +5,6 @@
 """
 
 import os
-import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -168,7 +167,7 @@ class TestBilibiliDownloaderWithCookie(unittest.TestCase):
 
         downloader = BilibiliDownloader()
         # 不实际下载，只验证 cookiefile 被传入
-        with patch.object(downloader, 'download', wraps=None) as mock_dl:
+        with patch.object(downloader, 'download', wraps=None):
             # 直接测试 _apply_bilibili_cookie 调用
             ydl_opts = {}
             cookie_file = _apply_bilibili_cookie(ydl_opts)

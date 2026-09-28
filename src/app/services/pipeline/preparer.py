@@ -4,9 +4,9 @@ from typing import List, Optional, Union
 from pydantic import HttpUrl
 
 from app.downloaders.base import Downloader
-from app.enmus.exception import NoteErrorEnum
-from app.enmus.note_enums import DownloadQuality
-from app.enmus.task_status_enums import TaskStatus
+from app.enums.exception import NoteErrorEnum
+from app.enums.note_enums import DownloadQuality
+from app.enums.task_status_enums import TaskStatus
 from app.exceptions.note import NoteError
 from app.models.audio_model import AudioDownloadResult
 from app.models.gpt_model import GPTSource
@@ -234,7 +234,7 @@ class TaskPreparer:
             TaskCache.update_status(task_id, TaskStatus.FAILED, message=str(exc))
             raise
 
-        
+
     def _transcribe_audio(
         self,
         audio_file: str,

@@ -1,5 +1,5 @@
 # exceptions.py
-from app.enmus.exception import ProviderErrorEnum
+from app.enums.exception import ProviderErrorEnum
 
 
 class NoteError(Exception):

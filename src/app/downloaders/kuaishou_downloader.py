@@ -7,7 +7,7 @@ import requests
 
 from app.downloaders.base import Downloader
 from app.downloaders.kuaishou_helper.kuaishou import KuaiShou
-from app.enmus.note_enums import DownloadQuality
+from app.enums.note_enums import DownloadQuality
 from app.models.audio_model import AudioDownloadResult
 from app.utils.path_helper import get_path_manager
 
@@ -103,8 +103,3 @@ class KuaiShouDownloader(Downloader, ABC):
             output_dir: Union[str, None] = None,
     ) -> str:
         return self.download(video_url, output_dir).video_path
-
-
-if __name__ == '__main__':
-    ks = KuaiShouDownloader()
-    ks.download('https://v.kuaishou.com/2vBqX74 王宝强携手刘昊然、岳云鹏上演精彩名场面 全程高能 看一遍笑一遍 "唐探1900 "快成长计划 ...更多')

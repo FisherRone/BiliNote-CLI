@@ -24,6 +24,40 @@ def print_error(message: str) -> None:
     print(f"✗ {message}")
 
 
+def format_count(n) -> str | None:
+    """格式化数量，使用中文单位（无、k、w），最多3位有效数字"""
+    if n is None:
+        return None
+    if n >= 10000:
+        return f"{n / 10000:.3g}w"
+    if n >= 1000:
+        return f"{n / 1000:.3g}k"
+    return str(n)
+
+
+def format_duration(seconds) -> str | None:
+    """格式化视频时长，如 "1h30min", "7min", "45s"""
+    if seconds is None:
+        return None
+    try:
+        seconds = int(float(seconds))
+    except (ValueError, TypeError):
+        return None
+
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+
+    if hours > 0:
+        if minutes > 0:
+            return f"{hours}h{minutes}min"
+        return f"{hours}h"
+    elif minutes > 0:
+        return f"{minutes}min"
+    else:
+        return f"{secs}s"
+
+
 def print_note_preview(markdown: str, limit: int = 500) -> None:
     """打印笔记前 limit 字符预览"""
     print(markdown[:limit])

@@ -33,8 +33,8 @@ class WhisperCppTranscriber(Transcriber):
         # 检查 CLI 是否可用
         if not self._is_cli_available():
             raise RuntimeError(
-                f"未找到 whisper-cli。请安装 whisper.cpp 并确保其在 PATH 中，"
-                f"或通过配置指定路径: transcriber.whisper-cpp.cli_path"
+                "未找到 whisper-cli。请安装 whisper.cpp 并确保其在 PATH 中，"
+                "或通过配置指定路径: transcriber.whisper-cpp.cli_path"
             )
 
         # 检查模型路径（展开 ~ 为用户主目录）

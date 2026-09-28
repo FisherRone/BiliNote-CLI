@@ -68,6 +68,6 @@ def config_cli(args):
         config_mgr = get_config_manager()
         notes_dir = config_mgr.get("output.default_notes_dir", "")
         notes_status = f"✓ {notes_dir}" if notes_dir else "✗ 未设置（使用默认路径）"
-        print(f"\n输出配置:\n")
+        print("\n输出配置:\n")
         print(f"  {notes_status}  output.default_notes_dir   自定义笔记输出目录")
-        print(f"\n使用 bilinote config set <KEY> <VALUE> 设置密钥或配置")
+        print("\n使用 bilinote config set <KEY> <VALUE> 设置密钥或配置")

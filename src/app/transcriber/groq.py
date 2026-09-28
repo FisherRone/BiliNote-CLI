@@ -4,7 +4,6 @@ import os
 from app.decorators.timeit import timeit
 from app.models.transcriber_model import TranscriptResult, TranscriptSegment
 from app.transcriber.base import Transcriber
-from app.secret_manager import get_secret
 from app.config_manager import get_config_manager
 from openai import OpenAI
 import ffmpeg
@@ -31,16 +30,16 @@ class GroqTranscriber(Transcriber, ABC):
             print(f"文件超过 {MAX_SIZE_MB}MB，开始压缩（当前 {round(file_size / (1024 * 1024), 2)}MB）...")
             file_path = compress_audio(file_path)
             print(f"压缩完成，临时路径：{file_path}")
-        
+
         # 从配置文件读取 Groq 配置（支持 config.yaml 覆盖）
         config = _config_manager.get_transcriber_config("groq")
         api_key = config.get("api_key")
         if not api_key:
             raise Exception("Groq 转写器未配置，请使用 bilinote config set GROQ_API_KEY <value> 设置")
-        
+
         base_url = config.get("base_url", "https://api.groq.com/openai/v1")
         model = config.get("model", "whisper-large-v3")
-        
+
         client = OpenAI(
             api_key=api_key,
             base_url=base_url

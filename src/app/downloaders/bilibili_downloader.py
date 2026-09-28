@@ -3,11 +3,10 @@ import json
 import tempfile
 from abc import ABC
 from typing import Union, Optional, List
-from pathlib import Path
 
 import yt_dlp
 
-from app.downloaders.base import Downloader, DownloadQuality, QUALITY_MAP
+from app.downloaders.base import Downloader, DownloadQuality
 from app.models.notes_model import AudioDownloadResult
 from app.models.transcriber_model import TranscriptResult, TranscriptSegment
 from app.utils.logger import get_logger
@@ -16,6 +15,9 @@ from app.utils.url_parser import extract_video_id
 from app.utils.cookie_helper import get_cookie
 
 logger = get_logger(__name__)
+
+_USER_AGENT = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36')
 
 
 def _cookie_string_to_file(cookie_str: str, domain: str = ".bilibili.com") -> str:
@@ -78,7 +80,7 @@ class BilibiliDownloader(Downloader, ABC):
             'quiet': False,
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                'User-Agent': _USER_AGENT,
             },
         }
 
@@ -87,17 +89,18 @@ class BilibiliDownloader(Downloader, ABC):
         if skip_download:
             ydl_opts['skip_download'] = True
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=not skip_download)
-            video_id = info.get("id")
-            title = info.get("title")
-            duration = info.get("duration", 0)
-            cover_url = info.get("thumbnail")
-            audio_path = os.path.join(output_dir, f"{video_id}.mp3")
-
-        # 清理临时 cookie 文件
-        if cookie_file and os.path.exists(cookie_file):
-            os.unlink(cookie_file)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=not skip_download)
+                video_id = info.get("id")
+                title = info.get("title")
+                duration = info.get("duration", 0)
+                cover_url = info.get("thumbnail")
+                audio_path = os.path.join(output_dir, f"{video_id}.mp3")
+        finally:
+            # 清理临时 cookie 文件（异常路径也要清理，避免登录态残留磁盘）
+            if cookie_file and os.path.exists(cookie_file):
+                os.unlink(cookie_file)
 
         if not skip_download and not os.path.exists(audio_path):
             raise FileNotFoundError(f"音频下载失败，文件未生成: {audio_path}")
@@ -143,20 +146,21 @@ class BilibiliDownloader(Downloader, ABC):
             'merge_output_format': 'mp4',  # 确保合并成 mp4
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                'User-Agent': _USER_AGENT,
             },
         }
 
         cookie_file = _apply_bilibili_cookie(ydl_opts)
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            video_id = info.get("id")
-            video_path = os.path.join(output_dir, f"{video_id}.mp4")
-
-        # 清理临时 cookie 文件
-        if cookie_file and os.path.exists(cookie_file):
-            os.unlink(cookie_file)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=True)
+                video_id = info.get("id")
+                video_path = os.path.join(output_dir, f"{video_id}.mp4")
+        finally:
+            # 清理临时 cookie 文件（异常路径也要清理，避免登录态残留磁盘）
+            if cookie_file and os.path.exists(cookie_file):
+                os.unlink(cookie_file)
 
         if not os.path.exists(video_path):
             raise FileNotFoundError(f"视频文件未找到: {video_path}")
@@ -202,7 +206,7 @@ class BilibiliDownloader(Downloader, ABC):
             'quiet': True,
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                'User-Agent': _USER_AGENT,
             },
         }
 

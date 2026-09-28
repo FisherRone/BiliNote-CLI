@@ -25,7 +25,7 @@ def search(keyword: str, platform: str = "bilibili", limit: int = 20) -> List[Di
     elif platform == "youtube":
         return _search_youtube(keyword, limit)
     else:
-        logger.error("搜索不支持平台: %s", platform)
+        logger.error(f"搜索不支持平台: {platform}")
         return []
 
 
@@ -69,7 +69,7 @@ def _search_bilibili(keyword: str, limit: int = 20) -> List[Dict]:
                 page_size=page_size,
             ))
         except Exception as e:
-            logger.error("B站搜索失败 (page=%d): %s", page, e)
+            logger.error(f"B站搜索失败 (page={page}): {e}")
             break
 
         for v in data.get("result", []):

@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.enmus.note_enums import DownloadQuality
+from app.enums.note_enums import DownloadQuality
 
 
 class ProcessConfig(BaseModel):

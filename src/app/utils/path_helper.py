@@ -1,6 +1,5 @@
 import os
 import sys
-from pathlib import Path
 
 # 源代码项目根目录（始终指向源码位置，只读）
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -11,7 +10,7 @@ _BILINOTE_HOME = os.path.join(os.path.expanduser("~"), ".bilinote")
 
 def _get_hf_cache_dir() -> str:
     """获取 HuggingFace 模型缓存目录
-    
+
     优先级：HF_HOME > HF_CACHE_HOME > 默认路径
     参考 HuggingFace 官方文档：https://huggingface.co/docs/huggingface_hub/guides/manage-cache
     """
@@ -19,12 +18,12 @@ def _get_hf_cache_dir() -> str:
     hf_home = os.getenv("HF_HOME")
     if hf_home:
         return os.path.join(hf_home, "hub")
-    
+
     # 优先级 2: HF_CACHE_HOME 环境变量
     hf_cache_home = os.getenv("HF_CACHE_HOME")
     if hf_cache_home:
         return os.path.join(hf_cache_home, "hub")
-    
+
     # 优先级 3: 默认路径
     return os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub")
 
@@ -103,29 +102,29 @@ class PathManager:
 
         # 模型目录（HuggingFace 标准缓存）
         self.models_dir = _get_hf_cache_dir()
-    
+
     @staticmethod
     def _ensure_dir(path: str) -> str:
         """确保目录存在并返回路径"""
         os.makedirs(path, exist_ok=True)
         return path
-    
+
     def get_download_path(self, task_id: str, ext: str = ".mp3") -> str:
         """获取下载文件路径"""
         return os.path.join(self.downloads_dir, f"{task_id}{ext}")
-    
+
     def get_transcript_cache_path(self, task_id: str) -> str:
         """获取转写缓存路径"""
         return os.path.join(self.cache_transcript_dir, f"{task_id}_transcript.json")
-    
+
     def get_audio_meta_cache_path(self, task_id: str) -> str:
         """获取音频元信息缓存路径"""
         return os.path.join(self.cache_audio_meta_dir, f"{task_id}_audio.json")
-    
+
     def get_note_output_path(self, task_id: str, ext: str = ".md") -> str:
         """获取笔记输出路径"""
         return os.path.join(self.output_notes_dir, f"{task_id}{ext}")
-    
+
     def get_temp_dir(self, task_id: str, subdir: str = "") -> str:
         """获取临时目录"""
         if subdir:
@@ -133,19 +132,19 @@ class PathManager:
         else:
             path = os.path.join(self.temp_dir, task_id)
         return self._ensure_dir(path)
-    
+
     def get_state_file_path(self, task_id: str) -> str:
         """获取状态文件路径"""
         return os.path.join(self.state_dir, f"{task_id}.status.json")
-    
+
     def get_metadata_file_path(self, task_id: str) -> str:
         """获取元数据文件路径"""
         return os.path.join(self.cache_dir, f"{task_id}_metadata.json")
-    
+
     def get_gpt_checkpoint_path(self, task_id: str) -> str:
         """获取 GPT 检查点路径"""
         return os.path.join(self.cache_dir, f"{task_id}.gpt.checkpoint.json")
-    
+
     def get_model_dir(self, subdir: str = "whisper") -> str:
         """获取模型目录"""
         path = os.path.join(self.models_dir, subdir)
