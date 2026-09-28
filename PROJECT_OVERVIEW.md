@@ -6,9 +6,9 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 ### 入口与构建
 
-`src/cli.py` 是唯一的 CLI 入口（`bilinote` 命令），基于 argparse 实现子命令分发：`process`（生成笔记）、`search`（搜索视频）、`check`（环境诊断）、`config`（密钥管理）、`model-list` / `model-set-default`（模型管理）等。所有命令行参数在此文件中定义，业务逻辑通过调用 `NoteGenerator` 和 `AsyncBatchProcessor` 完成。
+`src/app/cli/` 包是唯一的 CLI 入口（`bilinote` 命令），`__init__.py` 负责 argparse 装配与子命令分发：`process`（生成笔记）、`search`（搜索视频）、`check`（环境诊断）、`config`（密钥管理）、`model-list` / `model-set-default` / `model-remove`（模型管理）、`status`（任务状态）等；各子命令实现拆分在同包各模块（`process_cmd.py`、`search_cmd.py`、`check_cmd.py`、`config_cmds.py`、`model_cmds.py` 等）。业务逻辑通过调用 `NoteGenerator` 和 `AsyncBatchProcessor` 完成。
 
-`pyproject.toml` 定义了项目元信息、依赖和入口点（`bilinote = "src.cli:main"`）。
+`pyproject.toml` 定义了项目元信息、依赖和入口点（`bilinote = "app.cli:main"`）。
 
 ### 核心业务层：services/
 
@@ -32,7 +32,7 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 `src/app/downloaders/base.py` — `Downloader` 抽象基类，定义 `download()`（下载音频）、`download_video()`（下载视频）、`download_subtitles()`（获取平台字幕）三个核心接口。
 
-具体实现按平台拆分：`bilibili_downloader.py`（B站，基于 bilibili-api-python）、`youtube_downloader.py`（YouTube，基于 yt-dlp）、`douyin_downloader.py`（抖音，含 `douyin_helper/abogus.py` 反爬辅助）、`kuaishou_downloader.py`（快手）、`xiaoyuzhoufm_download.py`（小宇宙播客）、`local_downloader.py`（本地文件）。`common.py` 存放下载器共用逻辑。
+具体实现按平台拆分：`bilibili_downloader.py`（B站，基于 bilibili-api-python）、`youtube_downloader.py`（YouTube，基于 yt-dlp）、`douyin_downloader.py`（抖音，含 `douyin_helper/abogus.py` 反爬辅助）、`kuaishou_downloader.py`（快手）、`local_downloader.py`（本地文件）。
 
 ### 转写器层：transcriber/
 
@@ -58,7 +58,7 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 ### 模型层：models/
 
-所有 Pydantic 数据模型集中于此：`process_config.py`（`ProcessConfig`，CLI 参数映射）、`pipeline_model.py`（`PreparedTask`，prepare→AI 阶段的中间数据）、`notes_model.py`（`NoteResult`、`AudioDownloadResult`）、`gpt_model.py`（`GPTSource`，喂给 GPT 的结构化输入）、`transcriber_model.py`（`TranscriptResult`）、`video_record.py`、`audio_model.py`、`model_config.py`（`ModelConfig`）、`provide_model.py`。
+所有 Pydantic 数据模型集中于此：`process_config.py`（`ProcessConfig`，CLI 参数映射）、`pipeline_model.py`（`PreparedTask`，prepare→AI 阶段的中间数据）、`notes_model.py`（`NoteResult`、`AudioDownloadResult`）、`gpt_model.py`（`GPTSource`，喂给 GPT 的结构化输入）、`transcriber_model.py`（`TranscriptResult`）、`audio_model.py`、`model_config.py`（`ModelConfig`）。
 
 ### 配置与密钥
 
@@ -87,13 +87,12 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 `src/app/enmus/` — 枚举定义：`task_status_enums.py`（`TaskStatus`）、`note_enums.py`（`DownloadQuality`）、`exception.py`（错误码）。
 `src/app/exceptions/` — 自定义异常：`biz_exception.py`（业务异常基类）、`note.py`、`provider.py`。
-`src/app/validators/` — 输入校验：`video_url_validator.py`。
 `src/app/decorators/` — 装饰器：`timeit.py`（计时）。
-`src/ffmpeg_helper.py` — FFmpeg 检测与调用封装。
+`src/app/utils/ffmpeg_helper.py` — FFmpeg 检测与调用封装。
 
 ### 测试
 
-`tests/` 目录结构与 `src/app/` 对应。`conftest.py` 定义全局 fixture。`unit/` 下按模块分目录存放单元测试（downloaders、gpt、utils、services、transcriber），`integration/` 存放集成测试。
+`tests/` 目录结构与 `src/app/` 对应。`conftest.py` 负责将 `src/` 加入 `sys.path`。`unit/` 下按模块分目录存放单元测试（downloaders、gpt、utils、services、transcriber），`integration/` 存放集成测试（通过环境变量 `RUN_INTEGRATION_TESTS` 门控，默认跳过）。
 
 ### 运行时数据目录
 

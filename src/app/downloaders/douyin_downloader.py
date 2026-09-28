@@ -171,12 +171,11 @@ class DouyinDownloader(Downloader):
         except Exception as e:
             raise ValueError("Douyin msToken API{0}".format(e))
 
-    def fetch_video_info(self, video_url: str) -> json:
+    def fetch_video_info(self, video_url: str) -> dict:
         try:
 
             aweme_id = self.extract_video_id(video_url)
             kwargs = self.headers_config
-            print("@kwargs:", kwargs)
             base_params = BaseRequestModel().model_dump()
             base_params["msToken"] = self.gen_real_msToken()
 
@@ -184,71 +183,56 @@ class DouyinDownloader(Downloader):
             bogus = ABogus()
             ab_value = bogus.get_value(base_params)
             a_bogus = quote(ab_value, safe='')
-            print("@a_bogus:", a_bogus)
-            print(base_params)
             query_str = urlencode(base_params)
             full_url = f"{DOUYIN_DOMAIN}/aweme/v1/web/aweme/detail/?{query_str}&a_bogus={a_bogus}"
 
-            print("Request URL:", full_url)
-
-
             response = requests.get(full_url, headers=kwargs)
 
-            print("Response JSON:", response.content)
             return response.json()
         except Exception as e:
-            print("请求失败:", e)
-            raise ValueError("请求失败:", e)
-        # print(kwargs)
+            raise ValueError(f"抖音视频信息请求失败: {e}") from e
 
     def download(
             self,
             video_url: str,
             output_dir: Union[str, None] = None,
-            quality: DownloadQuality = "fast",
-            need_video: Optional[bool] = False
+            quality: DownloadQuality = DownloadQuality.fast,
+            need_video: Optional[bool] = False,
+            skip_download: bool = False,
     ) -> AudioDownloadResult:
-        try:
-            print(
-                f"正在下载视频: {video_url}，保存路径: {output_dir}，质量: {quality}"
-            )
-            if output_dir is None:
-                output_dir = get_path_manager().downloads_dir
-            os.makedirs(output_dir, exist_ok=True)
+        if output_dir is None:
+            output_dir = get_path_manager().downloads_dir
+        os.makedirs(output_dir, exist_ok=True)
 
-            output_path = os.path.join(output_dir, "%(id)s.%(ext)s")
+        video_data = self.fetch_video_info(video_url)
+        aweme_detail = video_data['aweme_detail']
+        output_path = os.path.join(output_dir, f"{aweme_detail['aweme_id']}.mp3")
 
-            video_data = self.fetch_video_info(video_url)
-            output_path = output_path % {
-                "id": video_data['aweme_detail']['aweme_id'],
-                "ext": "mp3",
-            }
-            url = video_data['aweme_detail']['music']['play_url']['uri']
+        if not skip_download:
+            url = aweme_detail['music']['play_url']['uri']
             # 下载音频
             audio_data = requests.get(url)
             with open(output_path, 'wb') as f:
                 f.write(audio_data.content)
-            print(url)
-            tags = []
-            for tag in video_data['aweme_detail']['video_tag']:
-                if tag['tag_name']:
-                    tags.append(tag['tag_name'])
 
-            return AudioDownloadResult(
-                file_path=output_path,
-                title=video_data['aweme_detail']['item_title'],
-                duration=video_data['aweme_detail']['video']['duration'],
-                cover_url=video_data['aweme_detail']['video']['cover_original_scale']['url_list'][0] if
-                video_data['aweme_detail']['video']['cover'] else video_data['video']['big_thumbs']['img_url'],
-                platform="douyin",
-                video_id=video_data['aweme_detail']['aweme_id'],
-                raw_info={
-                    'tags': video_data['aweme_detail']['caption'] + ''.join(tags),
-                },
-                video_path=None  # ❗音频下载不包含视频路径
-            )
-        except Exception as e:
-            raise e
+        tags = []
+        for tag in aweme_detail['video_tag']:
+            if tag['tag_name']:
+                tags.append(tag['tag_name'])
+
+        return AudioDownloadResult(
+            file_path=output_path,
+            title=aweme_detail['item_title'],
+            duration=aweme_detail['video']['duration'],
+            cover_url=aweme_detail['video']['cover_original_scale']['url_list'][0] if
+            aweme_detail['video']['cover'] else video_data['video']['big_thumbs']['img_url'],
+            platform="douyin",
+            video_id=aweme_detail['aweme_id'],
+            raw_info={
+                'tags': aweme_detail['caption'] + ''.join(tags),
+            },
+            video_path=None  # ❗音频下载不包含视频路径
+        )
 
     def download_video(self, video_url: str, output_dir: Union[str, None] = None) -> str:
 
@@ -280,8 +264,7 @@ class DouyinDownloader(Downloader):
 
             return output_path
         except Exception as e:
-            print("请求失败:", e)
-            raise ValueError("请求失败:", e)
+            raise ValueError(f"抖音视频下载失败: {e}") from e
 
 
 

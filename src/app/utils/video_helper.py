@@ -3,6 +3,10 @@ from pathlib import Path
 
 import uuid
 
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def generate_screenshot(video_path: str, output_dir: str, timestamp: int, index: int) -> str:
     """
@@ -24,10 +28,9 @@ def generate_screenshot(video_path: str, output_dir: str, timestamp: int, index:
         "-y"
     ]
 
-    print("Running command:", command)
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print("ffmpeg failed:", result.stderr)
+        logger.warning("ffmpeg 截图命令执行失败: %s", result.stderr)
 
     return str(output_path)

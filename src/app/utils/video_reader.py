@@ -33,8 +33,7 @@ class VideoReader:
         path_manager = get_path_manager()
         self.frame_dir = frame_dir or path_manager.get_temp_dir("video_reader", "output_frames")
         self.grid_dir = grid_dir or path_manager.get_temp_dir("video_reader", "grid_output")
-        print(f"视频路径：{video_path}",self.frame_dir,self.grid_dir)
-        
+
         # 使用默认字体路径（data/resources/arial.ttf）
         if font_path is None:
             font_path = os.path.join(path_manager.resources_dir, "arial.ttf")
@@ -153,21 +152,17 @@ class VideoReader:
         logger.info("开始提取视频帧...")
         try:
             # 确保目录存在
-            print(self.frame_dir,self.grid_dir)
             os.makedirs(self.frame_dir, exist_ok=True)
             os.makedirs(self.grid_dir, exist_ok=True)
             #清空帧文件夹
             for file in os.listdir(self.frame_dir):
                 if file.startswith("frame_"):
                     os.remove(os.path.join(self.frame_dir, file))
-            print(self.frame_dir,self.grid_dir)
             #清空网格文件夹
             for file in os.listdir(self.grid_dir):
                 if file.startswith("grid_"):
                     os.remove(os.path.join(self.grid_dir, file))
-            print(self.frame_dir,self.grid_dir)
             self.extract_frames()
-            print("2#3",self.frame_dir,self.grid_dir)
             logger.info("开始拼接网格图...")
             image_paths = []
             groups = self.group_images()

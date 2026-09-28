@@ -84,7 +84,6 @@ class KuaiShou:
         if photo_id is None:
             logger.error(f"快手视频 ID 解析失败 {url}")
         video_details = self.get_video_details(real_url, photo_id)
-        print(video_details)
         if video_details is None:
             logger.error(f"快手视频详情解析失败 {url}")
         return video_details['data']

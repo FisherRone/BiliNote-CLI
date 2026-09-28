@@ -97,8 +97,9 @@ class LocalDownloader(Downloader, ABC):
             self,
             video_url: str,
             output_dir: str = None,
-            quality: DownloadQuality = "fast",
-            need_video: Optional[bool] = False
+            quality: DownloadQuality = DownloadQuality.fast,
+            need_video: Optional[bool] = False,
+            skip_download: bool = False,
     ) -> AudioDownloadResult:
         """
         处理本地文件路径，返回音频元信息
@@ -113,17 +114,19 @@ class LocalDownloader(Downloader, ABC):
 
         file_name = os.path.basename(video_url)
         title, _ = os.path.splitext(file_name)
-        print(title, file_name,video_url)
-        file_path=self.convert_to_mp3(video_url)
-        cover_path = self.extract_cover(video_url)
-        cover_url = cover_path
 
-        print('file——path',file_path)
+        if skip_download:
+            file_path = video_url
+            cover_url = None
+        else:
+            file_path = self.convert_to_mp3(video_url)
+            cover_url = self.extract_cover(video_url)
+
         return AudioDownloadResult(
             file_path=file_path,
             title=title,
             duration=0,  # 可选：后续加上读取时长
-            cover_url=cover_url,  # 暂无封面
+            cover_url=cover_url,
             platform="local",
             video_id=title,
             raw_info={

@@ -54,7 +54,7 @@ class BilibiliDownloader(Downloader, ABC):
         self,
         video_url: str,
         output_dir: Union[str, None] = None,
-        quality: DownloadQuality = "fast",
+        quality: DownloadQuality = DownloadQuality.fast,
         need_video: Optional[bool] = False,
         skip_download: bool = False,
     ) -> AudioDownloadResult:
@@ -125,7 +125,6 @@ class BilibiliDownloader(Downloader, ABC):
         if output_dir is None:
             output_dir = get_path_manager().downloads_dir
         os.makedirs(output_dir, exist_ok=True)
-        print("video_url",video_url)
         video_id=extract_video_id(video_url, "bilibili")
         video_path = os.path.join(output_dir, f"{video_id}.mp4")
         if os.path.exists(video_path):

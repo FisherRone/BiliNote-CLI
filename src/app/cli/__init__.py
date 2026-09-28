@@ -1,6 +1,6 @@
 """BiliNote CLI 命令入口：parser 装配 + 子命令分发
 
-实现按职责拆分至同包各模块；src/cli.py 为兼容入口。
+实现按职责拆分至同包各模块。
 """
 
 import argparse
@@ -56,31 +56,31 @@ def main():
         epilog='''
 示例:
   # 生成 B站视频笔记（自动识别平台，使用默认模型）
-  python cli.py process https://www.bilibili.com/video/BV1xx
+  bilinote process https://www.bilibili.com/video/BV1xx
 
   # 批量生成笔记
-  python cli.py process https://www.bilibili.com/video/BV1xx https://www.bilibili.com/video/BV1xx2
+  bilinote process https://www.bilibili.com/video/BV1xx https://www.bilibili.com/video/BV1xx2
 
   # 指定模型生成笔记
-  python cli.py process https://www.bilibili.com/video/BV1xx --model gpt-4o
+  bilinote process https://www.bilibili.com/video/BV1xx --model gpt-4o
 
   # 生成 YouTube 视频笔记并插入截图
-  python cli.py process https://youtube.com/watch?v=xxx --screenshot
+  bilinote process https://youtube.com/watch?v=xxx --screenshot
 
   # 处理本地视频
-  python cli.py process ./video.mp4
+  bilinote process ./video.mp4
 
   # 搜索视频并保存结果
-  python cli.py search "关键词" --platform bilibili
+  bilinote search "关键词" --platform bilibili
 
   # 从搜索结果处理全部视频
-  python cli.py process --json ~/.bilinote/output/search_result/xxx.json
+  bilinote process --json ~/.bilinote/output/search_result/xxx.json
 
   # 从搜索结果选择指定序号处理
-  python cli.py process --json ~/.bilinote/output/search_result/xxx.json --index 1 2 3
+  bilinote process --json ~/.bilinote/output/search_result/xxx.json --index 1 2 3
 
   # 查看任务状态
-  python cli.py status <task_id>
+  bilinote status <task_id>
 
   # 列出所有可用模型（★ 表示默认模型）
   bilinote model-list

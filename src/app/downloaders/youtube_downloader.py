@@ -24,7 +24,7 @@ class YoutubeDownloader(Downloader, ABC):
         self,
         video_url: str,
         output_dir: Union[str, None] = None,
-        quality: DownloadQuality = "fast",
+        quality: DownloadQuality = DownloadQuality.fast,
         need_video: Optional[bool] = False,
         skip_download: bool = False,
     ) -> AudioDownloadResult:
@@ -115,7 +115,4 @@ class YoutubeDownloader(Downloader, ABC):
 
         video_id = extract_video_id(video_url, "youtube")
         fetcher = YouTubeSubtitleFetcher()
-        print(
-            f"尝试获取字幕，video_id={video_id}, langs={langs}"
-        )
         return fetcher.fetch_subtitles(video_id, langs)

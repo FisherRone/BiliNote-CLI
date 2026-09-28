@@ -3,6 +3,10 @@ from typing import Optional
 import requests
 import os
 
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def detect_platform(url: str) -> Optional[str]:
     """
@@ -77,5 +81,5 @@ def resolve_bilibili_short_url(short_url: str) -> Optional[str]:
         response = requests.head(short_url, allow_redirects=True)
         return response.url
     except requests.RequestException as e:
-        print(f"Error resolving short URL: {e}")
+        logger.warning("短链接解析失败: %s", e)
         return None

@@ -53,8 +53,6 @@ class GroqTranscriber(Transcriber, ABC):
                 model=model,
                 response_format="verbose_json",
             )
-            print(transcription.text)
-        print(transcription)
         segments = []
         full_text = ""
 

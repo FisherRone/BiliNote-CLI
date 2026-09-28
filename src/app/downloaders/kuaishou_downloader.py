@@ -20,8 +20,9 @@ class KuaiShouDownloader(Downloader, ABC):
             self,
             video_url: str,
             output_dir: Union[str, None] = None,
-            quality: str = "fast",
-            need_video: Optional[bool] = False
+            quality: DownloadQuality = DownloadQuality.fast,
+            need_video: Optional[bool] = False,
+            skip_download: bool = False,
     ) -> AudioDownloadResult:
         if output_dir is None:
             output_dir = get_path_manager().downloads_dir
@@ -34,6 +35,7 @@ class KuaiShouDownloader(Downloader, ABC):
         title = photo_info['caption'].strip().replace('\n', '').replace(' ', '_')[:50]
         mp4_path = os.path.join(output_dir, f"{video_id}.mp4")
         mp3_path = os.path.join(output_dir, f"{video_id}.mp3")
+        tags = ','.join(tag['name'] for tag in video_raw_info.get('tags', []) if tag.get('name'))
 
         if os.path.exists(mp3_path):
             print(f"[已存在] 跳过下载: {mp3_path}")
@@ -45,7 +47,22 @@ class KuaiShouDownloader(Downloader, ABC):
                 platform="kuaishou",
                 video_id=video_id,
                 raw_info={
-                    'tags': ','.join(tag['name'] for tag in video_raw_info.get('tags', []) if tag.get('name'))
+                    'tags': tags
+                },
+                video_path=mp4_path
+            )
+
+        # 与 BilibiliDownloader 的 skip_download 契约一致：仅提取元信息，返回预期路径
+        if skip_download:
+            return AudioDownloadResult(
+                file_path=mp3_path,
+                title=title,
+                duration=photo_info['duration'],
+                cover_url=photo_info['coverUrl'],
+                platform="kuaishou",
+                video_id=video_id,
+                raw_info={
+                    'tags': tags
                 },
                 video_path=mp4_path
             )
@@ -75,7 +92,7 @@ class KuaiShouDownloader(Downloader, ABC):
             platform="kuaishou",
             video_id=video_id,
             raw_info={
-                'tags': ','.join(tag['name'] for tag in video_raw_info.get('tags', []) if tag.get('name'))
+                'tags': tags
             },
             video_path=mp4_path
         )
