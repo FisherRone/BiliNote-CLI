@@ -46,8 +46,8 @@ class TestCookieStringToFile(unittest.TestCase):
             content = f.read()
 
         self.assertIn("# Netscape HTTP Cookie File", content)
-        self.assertIn(".bilibili.com\tTRUE\t/\tFALSE\t0\tSESSDATA\tabc123", content)
-        self.assertIn(".bilibili.com\tTRUE\t/\tFALSE\t0\tbili_jct\txyz789", content)
+        self.assertIn(".bilibili.com\tTRUE\t/\tFALSE\t2147483647\tSESSDATA\tabc123", content)
+        self.assertIn(".bilibili.com\tTRUE\t/\tFALSE\t2147483647\tbili_jct\txyz789", content)
 
     def test_convert_cookie_with_spaces(self):
         """转换含有空格的 cookie 字符串"""
@@ -84,8 +84,8 @@ class TestCookieStringToFile(unittest.TestCase):
 
         self.assertIn("\tkey1\tval1", content)
         self.assertIn("\tkey2\tval2", content)
-        # 空 key 也会写入
-        self.assertIn("\tempty_key", content)
+        # 空 key 会被跳过（Netscape 格式要求 cookie name 非空）
+        self.assertNotIn("\tempty_key", content)
         # no_equals 不会写入（没有 = 分隔符）
         self.assertNotIn("\tno_equals", content)
 

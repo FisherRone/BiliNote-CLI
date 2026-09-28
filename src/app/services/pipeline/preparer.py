@@ -42,6 +42,9 @@ class TaskPreparer:
         task_id: Optional[str] = None,
         output_path: Optional[str] = None,
     ) -> Optional[PreparedTask]:
+        # 每次准备都重置上一任务残留的下载产物，避免批量处理时状态泄漏
+        self.video_path = None
+        self.video_img_urls = []
         logger.info(f"[prepare] params: {cfg.model_dump()}")
         grid_size: List[int] = list(cfg.grid_size) if cfg.grid_size else []
 

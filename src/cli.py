@@ -159,7 +159,7 @@ def main():
                        choices=['bilibili', 'youtube', 'douyin', 'kuaishou', 'local'],
                        help='视频平台（可选，默认自动识别）')
     process_parser.add_argument('--model', default=None, help='模型名称（可选，默认使用配置的默认模型）')
-    process_parser.add_argument('--output-dir', default=None, help='批量输出目录（多任务时自动创建批次目录）')
+    process_parser.add_argument('--output-dir', default=None, help='笔记输出目录（留空则使用默认路径）')
     
     # search 子命令 - 搜索视频
     search_parser = subparsers.add_parser('search', help='搜索视频并保存结果为 JSON')
@@ -373,18 +373,28 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str, output_dir:
         
         try:
             note_generator = NoteGenerator()
+
+            # 确定笔记输出路径（CLI 参数 > config.yaml > 默认）
+            if output_dir:
+                output_dir = os.path.expanduser(os.path.expandvars(output_dir))
+                os.makedirs(output_dir, exist_ok=True)
+                custom_output_path = os.path.join(output_dir, f"{task_id or 'unknown'}.md")
+            else:
+                custom_output_path = None
+
             result = note_generator.generate(
                 video_url=url,
                 platform=platform,
                 cfg=cfg,
                 task_id=task_id,
                 model_name=model_name,
+                output_path=custom_output_path,
             )
             
             if result and result.markdown:
                 task_id = task_id or "unknown"
                 path_manager = get_path_manager()
-                output_file = path_manager.get_note_output_path(task_id)
+                output_file = custom_output_path or path_manager.get_note_output_path(task_id)
                 with open(output_file, 'w', encoding='utf-8') as f:
                     f.write(result.markdown)
                 
@@ -585,7 +595,10 @@ def remove_model_cli(model_id: str):
 
 def config_cli(args):
     """配置管理命令"""
-    from app.secret_manager import set_secret, get_secret, delete_secret, list_known_keys, get_configured_keys, mask_value
+    from app.secret_manager import (
+        set_secret, get_secret, delete_secret,
+        list_known_keys, get_configured_keys, mask_value, KNOWN_KEYS,
+    )
     from app.config_manager import get_config_manager
     
     if not args.config_action:
@@ -594,21 +607,46 @@ def config_cli(args):
         return
     
     if args.config_action == 'set':
-        set_secret(args.key, args.value)
-        print(f"✓ 已设置密钥: {args.key}")
+        key = args.key
+        value = args.value
+        if key in KNOWN_KEYS:
+            # 密钥类 key → keyring
+            set_secret(key, value)
+            print(f"✓ 已设置密钥: {key}")
+        else:
+            # 非密钥 key → config.yaml
+            config_mgr = get_config_manager()
+            config_mgr.set(key, value)
+            print(f"✓ 已设置配置: {key}")
     
     elif args.config_action == 'get':
-        value = get_secret(args.key)
-        if value:
-            print(f"{args.key} = {mask_value(value)}")
+        key = args.key
+        if key in KNOWN_KEYS:
+            value = get_secret(key)
+            if value:
+                print(f"{key} = {mask_value(value)}")
+            else:
+                print(f"✗ 密钥 {key} 未配置")
         else:
-            print(f"✗ 密钥 {args.key} 未配置")
+            config_mgr = get_config_manager()
+            value = config_mgr.get(key)
+            if value is not None and value != "":
+                print(f"{key} = {value}")
+            else:
+                print(f"✗ 配置 {key} 未设置")
     
     elif args.config_action == 'delete':
-        if delete_secret(args.key):
-            print(f"✓ 已删除密钥: {args.key}")
+        key = args.key
+        if key in KNOWN_KEYS:
+            if delete_secret(key):
+                print(f"✓ 已删除密钥: {key}")
+            else:
+                print(f"✗ 密钥 {key} 不存在或删除失败")
         else:
-            print(f"✗ 密钥 {args.key} 不存在或删除失败")
+            # 从 config.yaml 中删除（设为空字符串）
+            config_mgr = get_config_manager()
+            config_mgr.set(key, "")
+            print(f"✓ 已清除配置: {key}")
     
     elif args.config_action == 'list':
         known = list_known_keys()
@@ -617,7 +655,14 @@ def config_cli(args):
         for key, desc in known.items():
             status = "✓ 已配置" if key in configured else "✗ 未配置"
             print(f"  {status}  {key:25s}  {desc}")
-        print(f"\n使用 bilinote config set <KEY> <VALUE> 设置密钥")
+
+        # 展示 YAML 配置项
+        config_mgr = get_config_manager()
+        notes_dir = config_mgr.get("output.default_notes_dir", "")
+        notes_status = f"✓ {notes_dir}" if notes_dir else "✗ 未设置（使用默认路径）"
+        print(f"\n输出配置:\n")
+        print(f"  {notes_status}  output.default_notes_dir   自定义笔记输出目录")
+        print(f"\n使用 bilinote config set <KEY> <VALUE> 设置密钥或配置")
     
 
 

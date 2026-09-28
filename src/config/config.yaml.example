@@ -30,6 +30,10 @@ transcriber:
 # FFmpeg
 ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
 
+# 输出配置
+output:
+  default_notes_dir: ""            # 自定义笔记输出目录（留空使用默认路径 ~/.bilinote/data/output/notes/）
+
 # GPT 客户端
 gpt_client:
   token_limit: 128000             # 模型上下文窗口限制
