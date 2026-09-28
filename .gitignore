@@ -58,10 +58,10 @@ profile_default/
 ipython_config.py
 
 # pyenv
-.python-version
+# (.python-version 应入库：钉住 Python 版本)
 
 # UV
-uv.lock
+# (uv.lock 应入库：保证依赖可复现，CI 使用 --frozen 安装)
 
 # pipenv
 Pipfile.lock
@@ -120,6 +120,9 @@ logs/
 *.log
 /data/*
 !/data/resources/
+
+# 本地 AI 工作笔记，不入库
+AI 聊天记录/
 
 # FFmpeg 构建文件
 ffmpeg*/
