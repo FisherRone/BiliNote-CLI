@@ -27,6 +27,10 @@ transcriber:
     cli_path: ""         # whisper-cli 可执行文件路径（系统 PATH 里有 whisper-cli 时无需填写）
     model_path: "{default_whisper_model_path}"       # ggml 模型文件路径，如 {example_whisper_model_path}
 
+# 输出目录
+output:
+  default_dir: ""                  # 默认笔记保存目录（留空则使用 ~/.bilinote/data/output/notes/）
+
 # FFmpeg
 ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
 

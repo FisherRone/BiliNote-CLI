@@ -1,12 +1,8 @@
 # Changelog
 
 ## [Unreleased]
-### Changed
-- P1 清理与结构优化：清除死代码与 Web 后端遗留（BatchProcessor 同步类、validators 包、localhost:8483 封面上传逻辑等），移除零引用依赖 browser-cookie3。
-- CLI 代码由 816 行单文件拆分为 `app.cli` 包（process/search/model/config/check/shortcut 各归其位）。
-- 包布局正规化：wheel 仅打包 `app` 与 `config` 两个顶层包，移除 sys.path hack，入口改为 `app.cli:main`；本地视频封面改存本地路径。
-- `get_model_config` 新增 `report_missing` 参数，model-list/check 不再依赖日志级别 hack。
-- uv.lock 与 .python-version 纳入版本管理；untrack 本地 AI 笔记目录；重建 CI（uv + pytest + deptry，三平台矩阵）。
+### Added
+- 支持在 config.yaml 中配置默认笔记保存目录（`output.default_dir`），永久生效。
 
 ## [0.1.4] - 2026-06-15
 ### Add

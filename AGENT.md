@@ -60,6 +60,15 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## Approach
+
+Read existing files before writing. Don't re-read unless changed.
+Thorough in reasoning, concise in output.
+Skip files over 100KB unless required.
+No sycophantic openers or closing fluff.
+No emojis or em-dashes.
+Do not guess APIs, versions, flags, commit SHAs, or package names. Verify by reading code or docs before asserting.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
@@ -71,13 +80,15 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## uv 操作
 
-安装包：uv add
+- 安装包：`uv add`
+- 安装/更新本项目：`uv tool install --force --no-cache .`
 
 
 ### 运行临时 Python 代码
 ```bash
 uv run python -c "print('import yt_dlp;Hello from uv')"
 ```
+
 
 ## 查看文档
 | 方法 | 能否执行 | 经验 |

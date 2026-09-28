@@ -29,21 +29,13 @@ def _get_hf_cache_dir() -> str:
     return os.path.join(os.path.expanduser("~"), ".cache", "huggingface", "hub")
 
 
-def _get_default_logs_dir() -> str:
-    """按平台返回系统标准日志目录
-
-    macOS:   ~/Library/Logs/bilinote-cli
-    Windows: %LOCALAPPDATA%/bilinote-cli/logs
-    Linux:   ${XDG_STATE_HOME:-~/.local/state}/bilinote-cli/logs
-    """
-    home = os.path.expanduser("~")
-    if sys.platform == "darwin":
-        return os.path.join(home, "Library", "Logs", "bilinote-cli")
-    if sys.platform == "win32":
-        local_app_data = os.getenv("LOCALAPPDATA") or os.path.join(home, "AppData", "Local")
-        return os.path.join(local_app_data, "bilinote-cli", "logs")
-    xdg_state_home = os.getenv("XDG_STATE_HOME") or os.path.join(home, ".local", "state")
-    return os.path.join(xdg_state_home, "bilinote-cli", "logs")
+def _read_config_default_output_dir() -> str:
+    """从 config.yaml 读取 output.default_dir（安全导入，避免循环依赖）"""
+    try:
+        from app.config_manager import get_config_manager
+        return get_config_manager().get("output.default_dir", "")
+    except Exception:
+        return ""
 
 
 class PathManager:
@@ -64,9 +56,7 @@ class PathManager:
     ├── config/                 # 用户可写配置（模型等）
 
     日志目录（系统标准路径，沙箱安全）:
-    macOS:   ~/Library/Logs/bilinote-cli/
-    Windows: %LOCALAPPDATA%/bilinote-cli/logs/
-    Linux:   ~/.local/state/bilinote-cli/logs/
+    ~/Library/Logs/bilinote-cli/
 
     只读目录（随源码分发）:
     ├── src/config/             # 内置配置
@@ -89,13 +79,20 @@ class PathManager:
         self.cache_transcript_dir = self._ensure_dir(os.path.join(self.cache_dir, "transcript"))
         self.cache_audio_meta_dir = self._ensure_dir(os.path.join(self.cache_dir, "audio_meta"))
         self.output_dir = self._ensure_dir(os.path.join(self.data_dir, "output"))
-        self.output_notes_dir = self._ensure_dir(os.path.join(self.output_dir, "notes"))
+
+        # 笔记输出目录：优先使用 config.yaml 中的 output.default_dir
+        custom_output = _read_config_default_output_dir()
+        if custom_output:
+            self.output_notes_dir = self._ensure_dir(os.path.expanduser(custom_output))
+        else:
+            self.output_notes_dir = self._ensure_dir(os.path.join(self.output_dir, "notes"))
+
         self.temp_dir = self._ensure_dir(os.path.join(self.data_dir, "temp"))
         self.state_dir = self._ensure_dir(os.path.join(self.data_dir, "state"))
         self.resources_dir = self._ensure_dir(os.path.join(self.data_dir, "resources"))
 
-        # 日志目录（按平台使用系统标准路径，避免沙箱权限问题）
-        self.logs_dir = self._ensure_dir(_get_default_logs_dir())
+        # 日志目录（使用系统标准路径，避免沙箱权限问题）
+        self.logs_dir = self._ensure_dir(os.path.join(os.path.expanduser("~"), "Library", "Logs", "bilinote-cli"))
 
         # 用户可写配置目录
         self.user_config_dir = self._ensure_dir(os.path.join(self.base_dir, "config"))
@@ -127,23 +124,9 @@ class PathManager:
         """获取音频元信息缓存路径"""
         return os.path.join(self.cache_audio_meta_dir, f"{task_id}_audio.json")
     
-    def _resolve_notes_dir(self) -> str:
-        """解析笔记输出目录，优先读取 config.yaml 中的自定义路径"""
-        try:
-            from app.config_manager import get_config_manager
-            config_mgr = get_config_manager()
-            custom_dir = config_mgr.get("output.default_notes_dir", "")
-            if custom_dir and isinstance(custom_dir, str) and custom_dir.strip():
-                expanded = os.path.expanduser(os.path.expandvars(custom_dir.strip()))
-                return self._ensure_dir(expanded)
-        except Exception:
-            pass
-        return self.output_notes_dir
-
     def get_note_output_path(self, task_id: str, ext: str = ".md") -> str:
-        """获取笔记输出路径（支持自定义目录配置）"""
-        notes_dir = self._resolve_notes_dir()
-        return os.path.join(notes_dir, f"{task_id}{ext}")
+        """获取笔记输出路径"""
+        return os.path.join(self.output_notes_dir, f"{task_id}{ext}")
     
     def get_temp_dir(self, task_id: str, subdir: str = "") -> str:
         """获取临时目录"""
