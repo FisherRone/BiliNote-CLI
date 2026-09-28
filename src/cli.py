@@ -555,16 +555,12 @@ def search_videos_cli(args):
 
 def list_models():
     """列出所有已配置的模型"""
-    import logging
-    # 临时抑制警告日志
-    logging.getLogger('config.model_config_manager').setLevel(logging.ERROR)
-    
     models = list_available_models()
     default_model = get_default_model()
     print(f"\n已配置的模型 ({len(models)} 个):")
     print("-" * 60)
     for model_id in models:
-        config = get_model_config(model_id)
+        config = get_model_config(model_id, report_missing=False)
         is_default = model_id == default_model
         marker = "★" if is_default else "✓"
         default_tag = " (默认)" if is_default else ""
@@ -717,10 +713,6 @@ def _check_model_api_key(model_name: str) -> bool:
 
 def check_cmd():
     """环境诊断：ffmpeg / API Key / Cookie / LLM 连通性"""
-    import logging
-    # 抑制 get_model_config 的 WARNING 日志（check 命令自行报告状态）
-    logging.getLogger('config.model_config_manager').setLevel(logging.ERROR)
-
     print("\n环境检查结果\n" + "=" * 50)
 
     # ── 1. ffmpeg ──────────────────────────────────────
@@ -773,7 +765,7 @@ def check_cmd():
     print(f"LLM 连通性测试（仅检查已配置 Key 的模型）:\n")
     tested = 0
     for model_id in sorted(MODELS.keys()):
-        config = get_model_config(model_id)
+        config = get_model_config(model_id, report_missing=False)
         if not config:
             continue
         tested += 1

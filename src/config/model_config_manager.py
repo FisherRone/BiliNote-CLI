@@ -77,29 +77,31 @@ def load_model_config() -> tuple[Dict, str]:
 MODELS, DEFAULT_MODEL = load_model_config()
 
 
-def get_model_config(model_id: str) -> Optional[Dict]:
+def get_model_config(model_id: str, report_missing: bool = True) -> Optional[Dict]:
     """
     根据 model_id 获取模型配置
-    
+
     从 MODELS 字典中查找配置，然后从环境变量读取 API Key
-    
+
     :param model_id: 模型标识符（如 gpt-4o, deepseek-chat）
+    :param report_missing: API Key 未配置时是否记录 warning（调用方自行报告状态时传 False）
     :return: 模型配置字典或 None
     """
     model_id_lower = model_id.lower()
-    
+
     # 查找模型配置
     if model_id_lower not in MODELS:
         logger.error(f"未知的模型: {model_id}，请在 src/config/model_config_manager.py 的 MODELS 字典中添加")
         return None
-    
+
     template = MODELS[model_id_lower]
     api_key_env = template["api_key_env"]
-    
+
     # 从 keyring 读取 API key
     api_key = get_secret(api_key_env)
     if not api_key:
-        logger.warning(f"密钥 {api_key_env} 未设置，请使用 bilinote config set {api_key_env} <value> 设置")
+        if report_missing:
+            logger.warning(f"密钥 {api_key_env} 未设置，请使用 bilinote config set {api_key_env} <value> 设置")
         return None
 
     # 读取配置，优先使用 config.yaml 中的 base_url
