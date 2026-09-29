@@ -5,6 +5,8 @@
 - 支持在 config.yaml 中配置默认笔记保存目录（`output.default_dir`），永久生效。
 
 ### Fixed
+- 修复 B 站笔记落盘绕过 `--output-dir`/批次目录的问题：落盘目录现在始终跟随用户指定（未指定才用默认目录），B 站友好命名"{标题} - {UP主} - {BV号}.md"只决定文件名（长标题/UP主名自动截断，BV号保留在末尾）。
+- 笔记写盘点收敛到 AIProcessor 单处：`process` 单任务不再写入两份相同文件，CLI"保存到"提示显示真实落盘路径（`NoteResult.output_path`）。
 - 修复 `process` 单任务成功路径因 `print_success` 未导入而误报错误并 exit(1) 的问题；新增 CLI 冒烟测试防止回归。
 - 修复 `note_helper.replace_content_markers` 中 merge 残留导致的 UnboundLocalError（B站时间戳链接替换必崩）。
 - 清理抖音下载器调试输出（含 Cookie/msToken 的请求头与完整响应打印）；修复异常消息为元组的问题。

@@ -146,11 +146,12 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
             )
 
             if result and result.markdown:
-                task_id = task_id or "unknown"
-                path_manager = get_path_manager()
-                output_file = custom_output_path or path_manager.get_note_output_path(task_id)
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(result.markdown)
+                # 笔记文件由 AIProcessor 统一落盘，这里只展示真实路径
+                output_file = (
+                    result.output_path
+                    or custom_output_path
+                    or get_path_manager().get_note_output_path(task_id or "unknown")
+                )
 
                 print_separator(before=True)
                 print_success("笔记生成成功！")

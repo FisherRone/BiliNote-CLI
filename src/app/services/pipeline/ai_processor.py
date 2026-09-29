@@ -1,11 +1,8 @@
-import os
 from pathlib import Path
 from typing import Optional
 
 from app.services.cache.task_cache import TaskCache
-from app.enums.exception import ProviderErrorEnum
 from app.enums.task_status_enums import TaskStatus
-from app.exceptions.provider import ProviderError
 from app.gpt.base import GPT
 from app.gpt.gpt_factory import GPTFactory
 from app.models.model_config import ModelConfig
@@ -78,7 +75,10 @@ class AIProcessor:
             TaskCache.update_status(task_id, TaskStatus.SUCCESS)
             logger.info(f"笔记生成成功 (task_id={task_id})")
             return NoteResult(
-                markdown=markdown, transcript=prepared.transcript, audio_meta=prepared.audio_meta
+                markdown=markdown,
+                transcript=prepared.transcript,
+                audio_meta=prepared.audio_meta,
+                output_path=final_path,
             )
 
         except Exception as exc:
@@ -88,11 +88,19 @@ class AIProcessor:
 
     @staticmethod
     def _resolve_output_path(prepared: PreparedTask) -> str:
-        """从视频元数据计算最终笔记文件路径。
+        """确定笔记最终落盘路径。
 
-        B 站视频使用 {标题} - {UP主} - {BV号}.md 格式，
-        其他平台或非 B 站视频回退到 prepared.output_path 或默认路径。
+        目录跟随 prepared.output_path 所在目录（用户通过 --output-dir 或批次目录
+        指定，未指定时为默认笔记目录）；文件名由平台命名规则决定：
+        B 站用 "{标题} - {UP主} - {BV号}.md"，其余平台沿用 output_path
+        自带的 "{task_id}.md"。
         """
+        if prepared.output_path:
+            out_dir = Path(prepared.output_path).parent
+        else:
+            from app.utils.path_helper import get_path_manager
+            out_dir = Path(get_path_manager().output_notes_dir)
+
         if prepared.platform == "bilibili" and prepared.audio_meta:
             raw_info = prepared.audio_meta.raw_info or {}
             uploader = raw_info.get("uploader", "")
@@ -100,9 +108,12 @@ class AIProcessor:
             video_id = prepared.audio_meta.video_id
             if uploader and title and video_id:
                 from app.utils.bilibili_meta import sanitize_filename
-                from app.utils.path_helper import get_path_manager
-                safe_name = sanitize_filename(f"{title} - {uploader} - {video_id}")
-                return os.path.join(get_path_manager().output_notes_dir, f"{safe_name}.md")
+                # 标题/UP主截断以约束文件名长度，BV号保持在末尾便于检索
+                safe_name = (
+                    f"{sanitize_filename(title)[:50]} - "
+                    f"{sanitize_filename(uploader)[:20]} - {video_id}"
+                )
+                return str(out_dir / f"{safe_name}.md")
 
         if prepared.output_path:
             return prepared.output_path
@@ -115,10 +126,7 @@ class AIProcessor:
         model_config = get_model_config(model_name)
         if not model_config:
             logger.error(f"[get_gpt] 无法加载模型配置: model_name={model_name}")
-            raise ProviderError(
-                code=ProviderErrorEnum.NOT_FOUND,
-                message=f"无法加载模型 '{model_name}' 的配置，请检查环境变量",
-            )
+            raise RuntimeError(f"无法加载模型 '{model_name}' 的配置，请检查环境变量")
 
         logger.info(f"创建 GPT 实例: {model_name}")
         config = ModelConfig(

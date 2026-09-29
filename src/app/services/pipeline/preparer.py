@@ -4,10 +4,8 @@ from typing import List, Optional, Union
 from pydantic import HttpUrl
 
 from app.downloaders.base import Downloader
-from app.enums.exception import NoteErrorEnum
 from app.enums.note_enums import DownloadQuality
 from app.enums.task_status_enums import TaskStatus
-from app.exceptions.note import NoteError
 from app.models.audio_model import AudioDownloadResult
 from app.models.gpt_model import GPTSource
 from app.models.pipeline_model import PreparedTask
@@ -138,10 +136,7 @@ class TaskPreparer:
         downloader_instance = SUPPORT_PLATFORM_MAP.get(platform)
         if not downloader_instance:
             logger.error(f"不支持的平台：{platform}")
-            raise NoteError(
-                code=NoteErrorEnum.PLATFORM_NOT_SUPPORTED.code,
-                message=NoteErrorEnum.PLATFORM_NOT_SUPPORTED.message,
-            )
+            raise RuntimeError(f"不支持的平台：{platform}，请检查链接或 platform 参数")
         logger.info(f"使用下载器：{downloader_instance.__class__}")
         return downloader_instance
 
