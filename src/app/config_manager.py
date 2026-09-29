@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 def _get_config_example_path() -> Path:
     """获取 config.yaml.example 模板文件路径"""
-    # 从当前文件位置推导: app/config_manager.py -> src/config/config.yaml.example
-    base_dir = Path(__file__).parent.parent
+    # 从当前文件位置推导: app/config_manager.py -> app/config/config.yaml.example
+    base_dir = Path(__file__).parent
     return base_dir / "config" / "config.yaml.example"
 
 
@@ -91,8 +91,8 @@ def _load_default_config() -> dict:
 
 def _get_transcriber_json_path() -> Path:
     """获取 transcriber.json 路径"""
-    # 从当前文件位置推导: app/config_manager.py -> src/config/transcriber.json
-    base_dir = Path(__file__).parent.parent
+    # 从当前文件位置推导: app/config_manager.py -> app/config/transcriber.json
+    base_dir = Path(__file__).parent
     return base_dir / "config" / "transcriber.json"
 
 
@@ -111,7 +111,7 @@ def _load_transcriber_defaults() -> dict:
 
 def _get_dev_config_json_path() -> Path:
     """获取 dev_config.json 路径"""
-    base_dir = Path(__file__).parent.parent
+    base_dir = Path(__file__).parent
     return base_dir / "config" / "dev_config.json"
 
 

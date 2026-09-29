@@ -1,6 +1,6 @@
 """模型管理子命令：列表 / 设置默认 / 删除"""
 
-from config.model_config_manager import (
+from app.config.model_config_manager import (
     get_default_model,
     get_model_config,
     list_available_models,

@@ -9,7 +9,7 @@ from app.services.batch_processor import AsyncBatchProcessor
 from app.services.note import NoteGenerator
 from app.utils.path_helper import get_path_manager
 from app.utils.url_parser import detect_platform, extract_video_id
-from config.model_config_manager import get_default_model, get_model_config
+from app.config.model_config_manager import get_default_model, get_model_config
 
 from .console import print_note_preview, print_separator, print_success
 from .shortcut import _show_shortcut_process_prompt

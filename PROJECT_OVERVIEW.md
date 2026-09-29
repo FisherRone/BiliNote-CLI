@@ -62,7 +62,7 @@ BiliNote-CLI 是一个 AI 视频笔记生成命令行工具，输入视频链接
 
 ### 配置与密钥
 
-`src/config/` — 配置管理目录。`model_config_manager.py` 管理模型配置（API Key、base_url、模型名的映射），读取 `models.json`（内置模型定义）和用户自定义模型。`transcriber.json` 定义转写器配置。`config.yaml.example` 是用户配置模板。
+`src/app/config/` — 配置数据包。`model_config_manager.py` 管理模型配置（API Key、base_url、模型名的映射），读取 `models.json`（内置模型定义）和用户自定义模型，配置延迟加载（import 本模块不读文件）。包内数据文件：`transcriber.json` 定义转写器配置，`config.yaml.example` 是用户配置模板，`dev_config.json` 为开发者默认配置。
 
 `src/app/config_manager.py` — `ConfigManager`，管理 `~/.bilinote/config.yaml` 中的非敏感配置（输出目录、默认转写器等）。
 

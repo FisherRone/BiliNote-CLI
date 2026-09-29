@@ -7,14 +7,9 @@ B 站为 "{标题} - {UP主} - {BV号}.md"。
 
 import os
 import shutil
-import sys
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
-
-# ai_processor 顶层 import config.model_config_manager（import 即读配置、
-# 触碰 keyring），测试环境用桩模块隔离
-sys.modules["config.model_config_manager"] = MagicMock()
+from unittest.mock import patch
 
 from app.models.audio_model import AudioDownloadResult
 from app.models.gpt_model import GPTSource

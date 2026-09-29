@@ -6,7 +6,7 @@ import os
 from app.gpt.provider.OpenAI_compatible_provider import OpenAICompatibleProvider
 from app.utils.ffmpeg_helper import check_ffmpeg_exists
 from app.utils.path_helper import get_path_manager
-from config.model_config_manager import get_model_config
+from app.config.model_config_manager import get_model_config
 
 from .console import print_separator
 
@@ -61,10 +61,10 @@ def check_cmd():
     print()
 
     # ── 4. LLM 连通性测试 ─────────────────────────────
-    from config.model_config_manager import MODELS
+    from app.config.model_config_manager import list_available_models
     print("LLM 连通性测试（仅检查已配置 Key 的模型）:\n")
     tested = 0
-    for model_id in sorted(MODELS.keys()):
+    for model_id in sorted(list_available_models()):
         config = get_model_config(model_id, report_missing=False)
         if not config:
             continue

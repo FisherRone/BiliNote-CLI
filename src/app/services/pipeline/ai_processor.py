@@ -11,7 +11,7 @@ from app.models.pipeline_model import PreparedTask
 from app.services.postprocessing import PostProcessor
 from app.utils.note_helper import prepend_source_link, prepend_video_meta, append_top_comments
 from app.utils.logger import get_logger
-from config.model_config_manager import get_model_config
+from app.config.model_config_manager import get_model_config
 
 logger = get_logger(__name__)
 

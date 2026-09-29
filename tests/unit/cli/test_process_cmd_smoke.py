@@ -11,15 +11,10 @@
 import io
 import os
 import shutil
-import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
-
-# process_cmd 依赖 config.model_config_manager（import 即读配置、触碰 keyring），
-# 测试环境用桩模块隔离（与 test_searcher 隔离 bilibili_api 的做法一致）
-sys.modules["config.model_config_manager"] = MagicMock()
 
 from app.cli import process_cmd
 from app.models.process_config import ProcessConfig

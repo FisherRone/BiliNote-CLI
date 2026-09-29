@@ -1,9 +1,10 @@
 """
 模型配置管理器
 双层配置：
-- 内置模型（只读）：src/config/models.json，随源码分发
+- 内置模型（只读）：app/config/models.json，随源码分发
 - 用户模型（可写）：~/.bilinote/config/models.json，用户手动编辑
 运行时合并两层配置，用户配置覆盖内置同名模型。
+配置延迟加载：import 本模块不读文件，首次访问配置的函数触发加载并缓存。
 """
 import os
 import json
@@ -15,9 +16,23 @@ from app.config_manager import get_config_manager
 
 logger = get_logger(__name__)
 
-# 内置配置文件路径（只读）
+# 内置配置文件路径（只读），数据文件随 app/config 包分发
 _BUILTIN_CONFIG_DIR = os.path.dirname(__file__)
 _BUILTIN_MODELS_FILE = os.path.join(_BUILTIN_CONFIG_DIR, "models.json")
+
+# 双层配置缓存，经 _ensure_loaded() 初始化后供各函数读写
+_models: Dict = {}
+_default_model: str = ""
+_loaded = False
+
+
+def _ensure_loaded() -> None:
+    """首次访问时加载并合并双层配置，之后走缓存"""
+    global _loaded, _models, _default_model
+    if _loaded:
+        return
+    _models, _default_model = load_model_config()
+    _loaded = True
 
 
 def _user_models_file() -> str:
@@ -73,28 +88,25 @@ def load_model_config() -> tuple[Dict, str]:
     return merged, default_model
 
 
-# 加载模型配置
-MODELS, DEFAULT_MODEL = load_model_config()
-
-
 def get_model_config(model_id: str, report_missing: bool = True) -> Optional[Dict]:
     """
     根据 model_id 获取模型配置
 
-    从 MODELS 字典中查找配置，然后从环境变量读取 API Key
+    从模型配置字典中查找配置，然后从环境变量读取 API Key
 
     :param model_id: 模型标识符（如 gpt-4o, deepseek-chat）
     :param report_missing: API Key 未配置时是否记录 warning（调用方自行报告状态时传 False）
     :return: 模型配置字典或 None
     """
+    _ensure_loaded()
     model_id_lower = model_id.lower()
 
     # 查找模型配置
-    if model_id_lower not in MODELS:
-        logger.error(f"未知的模型: {model_id}，请在 src/config/model_config_manager.py 的 MODELS 字典中添加")
+    if model_id_lower not in _models:
+        logger.error(f"未知的模型: {model_id}，请在用户模型配置 {_user_models_file()} 或内置 models.json 中添加")
         return None
 
-    template = MODELS[model_id_lower]
+    template = _models[model_id_lower]
     api_key_env = template["api_key_env"]
 
     # 从 keyring 读取 API key
@@ -122,7 +134,8 @@ def get_model_config(model_id: str, report_missing: bool = True) -> Optional[Dic
 
 def get_default_model() -> str:
     """获取默认模型"""
-    return DEFAULT_MODEL
+    _ensure_loaded()
+    return _default_model
 
 
 def set_default_model(model_id: str) -> bool:
@@ -132,24 +145,26 @@ def set_default_model(model_id: str) -> bool:
     :param model_id: 模型标识符
     :return: 是否设置成功
     """
-    global DEFAULT_MODEL
+    global _default_model
 
+    _ensure_loaded()
     model_id_lower = model_id.lower()
-    if model_id_lower not in MODELS:
+    if model_id_lower not in _models:
         logger.error(f"无法设置默认模型：未知的模型 {model_id}")
         return False
 
-    DEFAULT_MODEL = model_id_lower
+    _default_model = model_id_lower
     # 写入 config.yaml
     config_mgr = get_config_manager()
-    config_mgr.set("models.default_model", DEFAULT_MODEL)
+    config_mgr.set("models.default_model", _default_model)
     logger.info(f"已设置默认模型: {model_id}")
     return True
 
 
 def list_available_models() -> list:
     """列出所有已配置的模型（不检查 API Key）"""
-    return list(MODELS.keys())
+    _ensure_loaded()
+    return list(_models.keys())
 
 
 def add_model(model_id: str, api_key_env: str, base_url: str, model_name: str):
@@ -161,12 +176,12 @@ def add_model(model_id: str, api_key_env: str, base_url: str, model_name: str):
     :param base_url: API 基础 URL
     :param model_name: 实际模型名称
     """
-    global MODELS
+    _ensure_loaded()
 
     model_id_lower = model_id.lower()
 
     # 添加到模型配置
-    MODELS[model_id_lower] = {
+    _models[model_id_lower] = {
         "api_key_env": api_key_env,
         "base_url": base_url,
         "model_name": model_name
@@ -191,20 +206,21 @@ def remove_model(model_id: str) -> bool:
     :param model_id: 模型标识符
     :return: 是否删除成功
     """
-    global MODELS, DEFAULT_MODEL
+    global _default_model
 
+    _ensure_loaded()
     model_id_lower = model_id.lower()
 
-    if model_id_lower not in MODELS:
+    if model_id_lower not in _models:
         logger.error(f"无法删除模型：未知的模型 {model_id}")
         return False
 
     # 从内存中删除
-    del MODELS[model_id_lower]
+    del _models[model_id_lower]
 
     # 如果删除的是默认模型，清空默认模型设置
-    if DEFAULT_MODEL == model_id_lower:
-        DEFAULT_MODEL = ""
+    if _default_model == model_id_lower:
+        _default_model = ""
         logger.info(f"默认模型 {model_id} 已被移除")
 
     # 从用户配置中删除并标记（避免内置模型合并后重新出现）

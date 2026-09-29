@@ -56,7 +56,7 @@ class PathManager:
     └── logs/                   # 运行日志
 
     只读目录（随源码分发）:
-    ├── src/config/             # 内置配置
+    ├── src/app/config/         # 内置配置
     ~/.cache/huggingface/hub/   # ML 模型缓存（HuggingFace 标准）
     """
 
