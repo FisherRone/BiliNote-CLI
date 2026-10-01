@@ -125,6 +125,7 @@ class TaskPreparer:
                 output_path=str(markdown_cache_file) if markdown_cache_file else None,
                 style=cfg.style,
                 extras=cfg.extras,
+                note_format=cfg.note_format,
             )
 
         except Exception as exc:

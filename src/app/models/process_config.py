@@ -19,6 +19,7 @@ class ProcessConfig(BaseModel):
     link: bool = False
     style: str | None = None
     format: list[str] = Field(default_factory=list)
+    note_format: str = "markdown"
     video_understanding: bool = False
     video_interval: int = 0
     grid_size: list[int] | None = None

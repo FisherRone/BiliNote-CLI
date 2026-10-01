@@ -9,7 +9,8 @@ from app.models.model_config import ModelConfig
 from app.models.notes_model import NoteResult
 from app.models.pipeline_model import PreparedTask
 from app.services.postprocessing import PostProcessor
-from app.utils.note_helper import prepend_source_link, prepend_video_meta, append_top_comments
+from app.formatters import get_formatter
+from app.utils.note_helper import append_top_comments
 from app.utils.logger import get_logger
 from app.config.model_config_manager import get_model_config
 
@@ -45,11 +46,9 @@ class AIProcessor:
                     platform=prepared.platform,
                 )
 
-            markdown = prepend_source_link(markdown, prepared.video_url)
-
-            # 插入视频信息头部
-            raw_info = prepared.audio_meta.raw_info or {}
-            markdown = prepend_video_meta(markdown, raw_info)
+            # 笔记格式化挂件：markdown 保留来源链接+信息卡；obsidian 生成
+            # frontmatter + 一级标题（screenshot/link 标记替换已在上方完成）
+            markdown = get_formatter(prepared.note_format).decorate(markdown, prepared)
 
             # 追加热门评论尾部（仅 B 站）
             if prepared.platform == "bilibili":
@@ -91,9 +90,9 @@ class AIProcessor:
         """确定笔记最终落盘路径。
 
         目录跟随 prepared.output_path 所在目录（用户通过 --output-dir 或批次目录
-        指定，未指定时为默认笔记目录）；文件名由平台命名规则决定：
-        B 站用 "{标题} - {UP主} - {BV号}.md"，其余平台沿用 output_path
-        自带的 "{task_id}.md"。
+        指定，未指定时为默认笔记目录）；文件名统一为
+        "{标题[:50]} - {作者[:20]} - {视频ID}.md"，作者缺失时省略该段，
+        视频 ID 与标题相同（local 平台）时跳过；标题缺失时回退 task_id 命名。
         """
         if prepared.output_path:
             out_dir = Path(prepared.output_path).parent
@@ -101,19 +100,21 @@ class AIProcessor:
             from app.utils.path_helper import get_path_manager
             out_dir = Path(get_path_manager().output_notes_dir)
 
-        if prepared.platform == "bilibili" and prepared.audio_meta:
-            raw_info = prepared.audio_meta.raw_info or {}
-            uploader = raw_info.get("uploader", "")
-            title = raw_info.get("title", "")
-            video_id = prepared.audio_meta.video_id
-            if uploader and title and video_id:
+        audio_meta = prepared.audio_meta
+        if audio_meta:
+            raw_info = audio_meta.raw_info or {}
+            title = (audio_meta.title or raw_info.get("title") or "").strip()
+            author = (raw_info.get("uploader") or raw_info.get("author") or "").strip()
+            video_id = audio_meta.video_id or ""
+            if title:
                 from app.utils.bilibili_meta import sanitize_filename
-                # 标题/UP主截断以约束文件名长度，BV号保持在末尾便于检索
-                safe_name = (
-                    f"{sanitize_filename(title)[:50]} - "
-                    f"{sanitize_filename(uploader)[:20]} - {video_id}"
-                )
-                return str(out_dir / f"{safe_name}.md")
+                # 标题/作者截断以约束文件名长度，视频 ID 保持在末尾便于检索
+                segments = [sanitize_filename(title)[:50]]
+                if author:
+                    segments.append(sanitize_filename(author)[:20])
+                if video_id and video_id != title:
+                    segments.append(video_id)
+                return str(out_dir / f"{' - '.join(segments)}.md")
 
         if prepared.output_path:
             return prepared.output_path

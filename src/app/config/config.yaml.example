@@ -27,16 +27,13 @@ transcriber:
     cli_path: ""         # whisper-cli 可执行文件路径（系统 PATH 里有 whisper-cli 时无需填写）
     model_path: "{default_whisper_model_path}"       # ggml 模型文件路径，如 {example_whisper_model_path}
 
-# 输出目录
+# 输出配置
 output:
   default_dir: ""                  # 默认笔记保存目录（留空则使用 ~/.bilinote/data/output/notes/）
+  note_format: "markdown"          # 笔记输出格式：markdown（默认信息卡样式）或 obsidian（frontmatter + 一级标题，适合 Obsidian 库）
 
 # FFmpeg
 ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
-
-# 输出配置
-output:
-  default_notes_dir: ""            # 自定义笔记输出目录（留空使用默认路径 ~/.bilinote/data/output/notes/）
 
 # GPT 客户端
 gpt_client:

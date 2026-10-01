@@ -10,9 +10,24 @@ from app.services.note import NoteGenerator
 from app.utils.path_helper import get_path_manager
 from app.utils.url_parser import detect_platform, extract_video_id
 from app.config.model_config_manager import get_default_model, get_model_config
+from app.config_manager import get_config_manager
 
 from .console import print_note_preview, print_separator, print_success
 from .shortcut import _show_shortcut_process_prompt
+
+_NOTE_FORMATS = ("markdown", "obsidian")
+
+
+def _resolve_note_format(cli_value: str | None) -> str:
+    """笔记输出格式优先级：CLI 参数 > config.yaml output.note_format > markdown"""
+    if cli_value:
+        return cli_value
+    configured = (get_config_manager().get("output.note_format", "") or "").strip().lower()
+    if configured in _NOTE_FORMATS:
+        return configured
+    if configured:
+        print(f"警告: 未知的 output.note_format '{configured}'，使用 markdown")
+    return "markdown"
 
 
 def _check_model_api_key(model_name: str) -> bool:
@@ -56,6 +71,7 @@ def process_video_cli(args):
         sys.exit(1)
 
     cfg = ProcessConfig(**vars(args))
+    cfg.note_format = _resolve_note_format(args.note_format)
 
     items = []
     for url in video_urls:
@@ -122,6 +138,7 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
         print("开始生成笔记...")
         print(f"平台: {platform}")
         print(f"模型: {model_name}")
+        print(f"格式: {cfg.note_format}")
         print(f"视频: {url}")
         print_separator("-")
 

@@ -25,3 +25,4 @@ class PreparedTask:
     output_path: Optional[str] = None
     style: Optional[str] = None
     extras: Optional[str] = None
+    note_format: str = "markdown"

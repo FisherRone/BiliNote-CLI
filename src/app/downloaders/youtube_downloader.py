@@ -60,7 +60,13 @@ class YoutubeDownloader(Downloader, ABC):
             cover_url=cover_url,
             platform="youtube",
             video_id=video_id,
-            raw_info={'tags': info.get('tags')},
+            raw_info={
+                'tags': info.get('tags'),
+                'uploader': info.get('uploader') or info.get('channel') or '',
+                'description': info.get('description') or '',
+                'view_count': info.get('view_count'),
+                'like_count': info.get('like_count'),
+            },
             video_path=None,
         )
 

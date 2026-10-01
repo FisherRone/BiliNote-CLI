@@ -67,6 +67,9 @@ def main():
   # 生成 YouTube 视频笔记并插入截图
   bilinote process https://youtube.com/watch?v=xxx --screenshot
 
+  # 生成 Obsidian 格式笔记（frontmatter 属性 + 一级标题）
+  bilinote process https://www.bilibili.com/video/BV1xx --note-format obsidian
+
   # 处理本地视频
   bilinote process ./video.mp4
 
@@ -119,6 +122,9 @@ def main():
                        choices=['bilibili', 'youtube', 'douyin', 'kuaishou', 'local'],
                        help='视频平台（可选，默认自动识别）')
     process_parser.add_argument('--model', default=None, help='模型名称（可选，默认使用配置的默认模型）')
+    process_parser.add_argument('--note-format', default=None,
+                       choices=['markdown', 'obsidian'],
+                       help='笔记输出格式（默认取 config.yaml 的 output.note_format，再回退 markdown）')
     process_parser.add_argument('--output-dir', default=None, help='笔记输出目录（留空则使用默认路径）')
 
     # search 子命令 - 搜索视频

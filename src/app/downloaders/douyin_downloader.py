@@ -220,6 +220,7 @@ class DouyinDownloader(Downloader):
             if tag['tag_name']:
                 tags.append(tag['tag_name'])
 
+        statistics = aweme_detail.get('statistics') or {}
         return AudioDownloadResult(
             file_path=output_path,
             title=aweme_detail['item_title'],
@@ -230,6 +231,11 @@ class DouyinDownloader(Downloader):
             video_id=aweme_detail['aweme_id'],
             raw_info={
                 'tags': aweme_detail['caption'] + ''.join(tags),
+                'author': (aweme_detail.get('author') or {}).get('nickname') or '',
+                'description': aweme_detail.get('caption') or '',
+                'view_count': statistics.get('play_count'),
+                'like_count': statistics.get('digg_count'),
+                'share_count': statistics.get('share_count'),
             },
             video_path=None  # ❗音频下载不包含视频路径
         )
