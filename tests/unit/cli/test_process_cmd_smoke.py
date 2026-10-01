@@ -16,6 +16,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import MagicMock, patch
 
+from app.cli import main as cli_main
 from app.cli import process_cmd
 from app.models.process_config import ProcessConfig
 
@@ -72,6 +73,46 @@ class ProcessSingleTaskSmokeTest(unittest.TestCase):
 
         self.assertFalse(os.path.exists(os.path.join(self.tmpdir, "BV1xx.md")))
         mock_exit.assert_called_once_with(1)
+
+
+class ProcessCliNoNoteFormatRegressionTest(unittest.TestCase):
+    """回归（0c9ce11）：不带 --note-format 时 argparse 传出的 note_format=None，
+    曾在 ProcessConfig(**vars(args)) 处抛 ValidationError。
+
+    走真实 main() + argparse 解析整条入口路径，确认能到生成阶段且格式回退 markdown。
+    """
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmpdir, ignore_errors=True)
+
+    def test_process_without_note_format_uses_markdown(self):
+        fake_result = MagicMock()
+        fake_result.markdown = "# 笔记"
+        fake_result.output_path = os.path.join(self.tmpdir, "BV1xx.md")
+
+        fake_cm = MagicMock()
+        fake_cm.get.return_value = ""  # config.yaml 的 output.note_format 未配置
+
+        stdout = io.StringIO()
+        with patch.object(process_cmd, "NoteGenerator") as mock_ng, \
+                patch.object(process_cmd, "get_default_model", return_value="test-model"), \
+                patch.object(process_cmd, "get_model_config", return_value={"api_key": "sk-test"}), \
+                patch.object(process_cmd, "get_config_manager", return_value=fake_cm), \
+                patch("app.config_manager.get_config_manager", return_value=fake_cm), \
+                patch.object(process_cmd, "_show_shortcut_process_prompt"), \
+                patch("sys.exit") as mock_exit, \
+                patch("sys.argv", ["bilinote", "process", "https://www.bilibili.com/video/BV1xx"]), \
+                redirect_stdout(stdout):
+            mock_ng.return_value.generate.return_value = fake_result
+            cli_main()
+
+        out = stdout.getvalue()
+        self.assertIn("格式: markdown", out)
+        self.assertIn("笔记生成成功", out)
+        mock_exit.assert_not_called()
+        cfg_used = mock_ng.return_value.generate.call_args.kwargs["cfg"]
+        self.assertEqual(cfg_used.note_format, "markdown")
 
 
 if __name__ == "__main__":

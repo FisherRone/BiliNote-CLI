@@ -26,6 +26,12 @@ class ProcessConfig(BaseModel):
     no_subtitle: bool = False
     extras: str | None = None
 
+    @field_validator("note_format", mode="before")
+    @classmethod
+    def default_note_format(cls, v: object) -> object:
+        # argparse 未指定 --note-format 时值为 None，显式传入的 None 视为未设置
+        return v if v is not None else "markdown"
+
     @field_validator("quality", mode="before")
     @classmethod
     def parse_quality(cls, v: object) -> DownloadQuality:
