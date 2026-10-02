@@ -18,14 +18,19 @@ models:
     base_url: "http://127.0.0.1:11434/v1"
 
 # 转写器配置
-# 可用转写器类型（按优先级排序）: bcut, kuaishou, whisper-cpp, groq
+# 可用转写器类型: bcut, kuaishou, whisper-cpp, groq
 transcriber:
   default_type: "bcut" # 默认转写器类型
-  whisper_model_size: "base"       # whisper 模型大小
   groq_model: "whisper-large-v3"   # Groq 转写模型
   whisper-cpp:
     cli_path: ""         # whisper-cli 可执行文件路径（系统 PATH 里有 whisper-cli 时无需填写）
     model_path: "{default_whisper_model_path}"       # ggml 模型文件路径，如 {example_whisper_model_path}
+
+# 转写失败时的回退顺序（从左到右依次尝试；default_type 会自动插到最前）
+fallback_priority: ["bcut", "kuaishou", "whisper-cpp", "groq"]
+
+# 笔记中截图链接的前缀（截图文件以 前缀/文件名 形式引用）
+image_base_url: "/static/screenshots"
 
 # 输出配置
 output:
@@ -38,5 +43,7 @@ ffmpeg_bin_path: ""                # 自定义 FFmpeg 可执行文件路径
 # GPT 客户端
 gpt_client:
   token_limit: 128000             # 模型上下文窗口限制
+  token_threshold: 0.8            # 单次请求的 token 预算占 token_limit 的比例，超出会触发分块
+  chunk_history_n: 3              # 分块生成时携带的前序分块（历史）条数
   retry_attempts: 3                # 重试次数
   retry_backoff_seconds: 1.5       # 重试退避秒数
