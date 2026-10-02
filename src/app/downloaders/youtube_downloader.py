@@ -27,6 +27,7 @@ class YoutubeDownloader(Downloader, ABC):
         quality: DownloadQuality = DownloadQuality.fast,
         need_video: Optional[bool] = False,
         skip_download: bool = False,
+        quiet: bool = False,
     ) -> AudioDownloadResult:
         if output_dir is None:
             output_dir = get_path_manager().downloads_dir
@@ -38,7 +39,8 @@ class YoutubeDownloader(Downloader, ABC):
             'format': 'bestaudio[ext=m4a]/bestaudio/best',
             'outtmpl': output_path,
             'noplaylist': True,
-            'quiet': False,
+            'quiet': quiet,
+            'no_warnings': quiet,
         }
 
         if skip_download:
@@ -74,6 +76,7 @@ class YoutubeDownloader(Downloader, ABC):
         self,
         video_url: str,
         output_dir: Union[str, None] = None,
+        quiet: bool = False,
     ) -> str:
         """
         下载视频，返回视频文件路径
@@ -91,7 +94,8 @@ class YoutubeDownloader(Downloader, ABC):
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
             'outtmpl': output_path,
             'noplaylist': True,
-            'quiet': False,
+            'quiet': quiet,
+            'no_warnings': quiet,
             'merge_output_format': 'mp4',  # 确保合并成 mp4
         }
 

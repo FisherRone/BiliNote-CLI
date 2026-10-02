@@ -59,6 +59,7 @@ class BilibiliDownloader(Downloader, ABC):
         quality: DownloadQuality = DownloadQuality.fast,
         need_video: Optional[bool] = False,
         skip_download: bool = False,
+        quiet: bool = False,
     ) -> AudioDownloadResult:
         if output_dir is None:
             output_dir = get_path_manager().downloads_dir
@@ -77,7 +78,8 @@ class BilibiliDownloader(Downloader, ABC):
                 }
             ],
             'noplaylist': True,
-            'quiet': False,
+            'quiet': quiet,
+            'no_warnings': quiet,
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
                 'User-Agent': _USER_AGENT,
@@ -120,6 +122,7 @@ class BilibiliDownloader(Downloader, ABC):
         self,
         video_url: str,
         output_dir: Union[str, None] = None,
+        quiet: bool = False,
     ) -> str:
         """
         下载视频，返回视频文件路径
@@ -142,7 +145,8 @@ class BilibiliDownloader(Downloader, ABC):
             'format': 'bv*[ext=mp4]/bestvideo+bestaudio/best',
             'outtmpl': output_path,
             'noplaylist': True,
-            'quiet': False,
+            'quiet': quiet,
+            'no_warnings': quiet,
             'merge_output_format': 'mp4',  # 确保合并成 mp4
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',

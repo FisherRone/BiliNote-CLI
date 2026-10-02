@@ -84,6 +84,7 @@ def process_video_cli(args):
 
     # 极简模式仅属于直接给 URL 的单视频处理；--json 是批量模式，两者不交互
     quiet = args.quiet and not json_path and len(items) == 1
+    cfg.quiet = quiet  # 仅单任务 quiet 模式静默 yt-dlp，批量模式保持下载进度
 
     _process_tasks(items, cfg, model_name, args.output_dir, quiet=quiet)
     if not quiet:
@@ -180,7 +181,6 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
                     note_title = getattr(result.audio_meta, "title", None) or task_id or "未知标题"
                     print_success("笔记生成成功！")
                     print(f"标题：{note_title}")
-                    print(f"原链接：{url}")
                     print(f"保存到: {output_file}")
                 else:
                     print_separator(before=True)

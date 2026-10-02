@@ -87,6 +87,7 @@ class TaskPreparer:
                 video_interval=cfg.video_interval,
                 grid_size=grid_size,
                 skip_download=not need_full_download,
+                quiet=cfg.quiet,
             )
 
             # 3. 如果前面没拿到字幕，走转写流程
@@ -153,6 +154,7 @@ class TaskPreparer:
         video_interval: int,
         grid_size: List[int],
         skip_download: bool = False,
+        quiet: bool = False,
     ) -> AudioDownloadResult:
         logger.info(f"开始下载音视频 (task_id={task_id})")
         TaskCache.update_status(task_id, TaskStatus.DOWNLOADING)
@@ -175,6 +177,7 @@ class TaskPreparer:
                     quality=quality,
                     need_video=False,
                     skip_download=True,
+                    quiet=quiet,
                 )
                 if task_id:
                     TaskCache.save_audio_meta(task_id, audio)
@@ -194,7 +197,7 @@ class TaskPreparer:
         if need_video:
             try:
                 logger.info("开始下载视频")
-                video_path_str = downloader.download_video(video_url)
+                video_path_str = downloader.download_video(video_url, quiet=quiet)
                 self.video_path = Path(video_path_str)
                 logger.info(f"视频下载完成：{self.video_path}")
 
@@ -221,6 +224,7 @@ class TaskPreparer:
                 video_url=video_url,
                 quality=quality,
                 need_video=need_video,
+                quiet=quiet,
             )
             if task_id:
                 TaskCache.save_audio_meta(task_id, audio)

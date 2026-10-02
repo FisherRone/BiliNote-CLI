@@ -20,20 +20,22 @@ class Downloader(ABC):
     @abstractmethod
     def download(self, video_url: str, output_dir: str = None,
                  quality: DownloadQuality = DownloadQuality.fast, need_video: Optional[bool] = False,
-                 skip_download: bool = False) -> AudioDownloadResult:
+                 skip_download: bool = False, quiet: bool = False) -> AudioDownloadResult:
         '''
 
         :param need_video:
         :param video_url: 资源链接
         :param output_dir: 输出路径 默认根目录data
         :param quality: 音频质量 fast | medium | slow
+        :param quiet: 静默下载过程输出（yt-dlp 进度等）
         :return:返回一个 AudioDownloadResult 类
         '''
         pass
 
     @abstractmethod
     def download_video(self, video_url: str,
-                       output_dir: Union[str, None] = None) -> str:
+                       output_dir: Union[str, None] = None,
+                       quiet: bool = False) -> str:
         '''
         下载视频文件，返回视频文件路径
         '''

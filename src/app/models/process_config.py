@@ -25,6 +25,7 @@ class ProcessConfig(BaseModel):
     grid_size: list[int] | None = None
     no_subtitle: bool = False
     extras: str | None = None
+    quiet: bool = False  # 极简输出模式：同时静默 yt-dlp 下载进度
 
     @field_validator("note_format", mode="before")
     @classmethod

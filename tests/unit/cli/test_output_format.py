@@ -29,7 +29,7 @@ def _run_func(func, *args, **kwargs):
 
 
 class QuietModeOutputTest(unittest.TestCase):
-    """单任务 --quiet：只打印成功/标题/原链接/保存路径四类信息"""
+    """单任务 --quiet：只打印成功/标题/保存路径三类信息"""
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
@@ -58,8 +58,9 @@ class QuietModeOutputTest(unittest.TestCase):
 
         self.assertIn("✓ 笔记生成成功！", out)
         self.assertIn("标题：视频标题", out)
-        self.assertIn(f"原链接：{self.url}", out)
         self.assertIn("保存到:", out)
+        # 原链接行已移除
+        self.assertNotIn("原链接", out)
         # 过程输出全部抑制
         self.assertNotIn("开始生成笔记", out)
         self.assertNotIn("平台:", out)
@@ -105,6 +106,7 @@ class QuietWiringTest(unittest.TestCase):
                 redirect_stdout(stdout):
             mock_ng.return_value.generate.return_value = fake_result
             cli_main()
+        self._generate_mock = mock_ng.return_value.generate
         return mock_exit, stdout.getvalue()
 
     def test_quiet_flag_takes_effect_for_direct_url(self):
@@ -113,8 +115,15 @@ class QuietWiringTest(unittest.TestCase):
         self.assertIn("标题：Q标题", out)
         self.assertNotIn("开始生成笔记", out)
 
-    def test_quiet_ignored_with_json(self):
-        """--json 与 --quiet 互不交互：批量/json 模式下 quiet 直接忽略"""
+    def test_quiet_flag_propagates_to_config(self):
+        """--quiet 需传入 ProcessConfig.quiet，供静默 yt-dlp 下载进度"""
+        _, out = self._run_cli(["https://www.bilibili.com/video/BV1xx", "--quiet"])
+
+        generate = self._generate_mock
+        self.assertTrue(generate.call_args.kwargs["cfg"].quiet)
+
+    def test_quiet_not_propagated_in_batch_mode(self):
+        """--json 批量模式下 quiet 不生效，下载进度保持正常输出"""
         json_path = os.path.join(self.tmpdir, "result.json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump({"results": [{"index": 1,
@@ -124,6 +133,8 @@ class QuietWiringTest(unittest.TestCase):
 
         self.assertIn("从 JSON 加载全部 1 个视频链接", out)
         self.assertIn("开始生成笔记", out)  # 走了常规单任务输出，quiet 未生效
+        generate = self._generate_mock
+        self.assertFalse(generate.call_args.kwargs["cfg"].quiet)
 
 
 class BatchOutputFormatTest(unittest.TestCase):

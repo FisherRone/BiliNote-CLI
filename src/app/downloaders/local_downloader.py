@@ -81,7 +81,7 @@ class LocalDownloader(Downloader, ABC):
             return output_path
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"mp3 文件生成失败: {output_path}") from e
-    def download_video(self, video_url: str, output_dir: str = None) -> str:
+    def download_video(self, video_url: str, output_dir: str = None, quiet: bool = False) -> str:
         """
         处理本地文件路径，返回视频文件路径
         """
@@ -100,6 +100,7 @@ class LocalDownloader(Downloader, ABC):
             quality: DownloadQuality = DownloadQuality.fast,
             need_video: Optional[bool] = False,
             skip_download: bool = False,
+            quiet: bool = False,
     ) -> AudioDownloadResult:
         """
         处理本地文件路径，返回音频元信息
