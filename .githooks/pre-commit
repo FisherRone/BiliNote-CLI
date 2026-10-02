@@ -1,0 +1,12 @@
+#!/bin/sh
+# 防止误删 BiliNote.shortcut。
+# 该文件是 pyproject.toml force-include 的打包必需文件（bilinote install-shortcut
+# 依赖 wheel 内副本），缺失会导致 uv build / 发布构建直接失败。
+# 背景：2026-10 曾两次被功能提交顺带删除（0c9ce11、0b9ab3b）。
+if git diff --cached --name-status --diff-filter=D | grep -q 'BiliNote\.shortcut$'; then
+  echo "✗ 拒绝提交：暂存区包含对 BiliNote.shortcut 的删除。"
+  echo "  若是工作区文件丢失，恢复：git checkout origin/main -- BiliNote.shortcut"
+  echo "  确需删除：先修改 pyproject.toml 的 [tool.hatch.build.targets.wheel.force-include]，"
+  echo "  再用 git commit --no-verify 跳过本检查。"
+  exit 1
+fi
