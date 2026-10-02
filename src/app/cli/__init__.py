@@ -126,6 +126,8 @@ def main():
                        choices=['markdown', 'obsidian'],
                        help='笔记输出格式（默认取 config.yaml 的 output.note_format，再回退 markdown）')
     process_parser.add_argument('--output-dir', default=None, help='笔记输出目录（留空则使用默认路径）')
+    process_parser.add_argument('--quiet', action='store_true',
+                       help='极简输出（仅单视频处理生效：只打印标题、链接和保存路径）')
 
     # search 子命令 - 搜索视频
     search_parser = subparsers.add_parser('search', help='搜索视频并保存结果为 JSON')

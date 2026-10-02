@@ -29,7 +29,11 @@ def format_count(n) -> str | None:
     if n is None:
         return None
     if n >= 10000:
-        return f"{n / 10000:.3g}w"
+        w = n / 10000
+        # 万位数值 >=1000 时 %.3g 会退化为科学计数法（如 2.04e+03w），改用整数
+        if w >= 100:
+            return f"{w:.0f}w"
+        return f"{w:.3g}w"
     if n >= 1000:
         return f"{n / 1000:.3g}k"
     return str(n)

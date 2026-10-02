@@ -89,7 +89,10 @@ class TestSearchBilibili(unittest.TestCase):
                     "like": 500,
                     "favorites": 200,
                     "duration": "10:30",
-                    "author": "UP主A"
+                    "author": "UP主A",
+                    "pubdate": 1759335000,
+                    "description": "  视频简介\n第二行  ",
+                    "tag": "编程, Python, 教程"
                 },
                 {
                     "title": "Java入门",
@@ -116,9 +119,23 @@ class TestSearchBilibili(unittest.TestCase):
         self.assertEqual(results[0]["favorite_count"], 200)
         self.assertEqual(results[0]["duration"], 630)  # 10*60 + 30
         self.assertEqual(results[0]["author"], "UP主A")
+        self.assertEqual(results[0]["pubdate"], 1759335000)
+        self.assertEqual(results[0]["description"], "视频简介\n第二行")
+        self.assertEqual(results[0]["tags"], ["编程", "Python", "教程"])
 
         # 验证第二个结果
         self.assertEqual(results[1]["duration"], 5400)  # 1*3600 + 30*60
+        self.assertIsNone(results[1]["pubdate"])
+        self.assertEqual(results[1]["description"], "")
+        self.assertEqual(results[1]["tags"], [])
+
+    def test_split_tags(self):
+        """标签解析：逗号字符串拆分、列表透传、空值回退"""
+        from app.services import searcher
+        self.assertEqual(searcher._split_tags("a,b , c"), ["a", "b", "c"])
+        self.assertEqual(searcher._split_tags(["x", "", " y "]), ["x", "y"])
+        self.assertEqual(searcher._split_tags(None), [])
+        self.assertEqual(searcher._split_tags(""), [])
 
     def test_search_empty_result(self):
         """搜索结果为空"""
@@ -158,7 +175,10 @@ class TestSearchYoutube(unittest.TestCase):
                     "like_count": 5000,
                     "bookmark_count": 1000,
                     "duration": 600,
-                    "uploader": "Tech Channel"
+                    "uploader": "Tech Channel",
+                    "timestamp": 1759335000,
+                    "description": "A tutorial\nabout Python",
+                    "tags": ["python", "tutorial"]
                 }
             ]
         }
@@ -172,6 +192,9 @@ class TestSearchYoutube(unittest.TestCase):
         self.assertEqual(results[0]["play_count"], 100000)
         self.assertEqual(results[0]["duration"], 600)
         self.assertEqual(results[0]["author"], "Tech Channel")
+        self.assertEqual(results[0]["pubdate"], 1759335000)
+        self.assertEqual(results[0]["description"], "A tutorial\nabout Python")
+        self.assertEqual(results[0]["tags"], ["python", "tutorial"])
 
     @patch("yt_dlp.YoutubeDL")
     def test_search_empty_entries(self, mock_yt_class):

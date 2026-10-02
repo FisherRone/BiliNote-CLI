@@ -82,8 +82,12 @@ def process_video_cli(args):
         task_id = extract_video_id(url, platform)
         items.append((url, platform, task_id, task_id))
 
-    _process_tasks(items, cfg, model_name, args.output_dir)
-    _show_shortcut_process_prompt()
+    # 极简模式仅属于直接给 URL 的单视频处理；--json 是批量模式，两者不交互
+    quiet = args.quiet and not json_path and len(items) == 1
+
+    _process_tasks(items, cfg, model_name, args.output_dir, quiet=quiet)
+    if not quiet:
+        _show_shortcut_process_prompt()
 
 
 def _load_urls_from_json(json_path: str, indices: list[int] | None = None) -> list[str]:
@@ -121,10 +125,11 @@ def _load_urls_from_json(json_path: str, indices: list[int] | None = None) -> li
 
 
 def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
-                   output_dir: str | None = None, batch_name: str | None = None):
+                   output_dir: str | None = None, batch_name: str | None = None,
+                   quiet: bool = False):
     """统一任务处理入口
 
-    单任务：同步串行执行（保留笔记预览打印）
+    单任务：同步串行执行（保留笔记预览打印；quiet 时极简输出）
     多任务：主线程串行准备 + 线程池并行 AI 处理
     """
     if not items:
@@ -135,12 +140,13 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
     if len(items) == 1:
         url, platform, task_id, title = items[0]
 
-        print("开始生成笔记...")
-        print(f"平台: {platform}")
-        print(f"模型: {model_name}")
-        print(f"格式: {cfg.note_format}")
-        print(f"视频: {url}")
-        print_separator("-")
+        if not quiet:
+            print("开始生成笔记...")
+            print(f"平台: {platform}")
+            print(f"模型: {model_name}")
+            print(f"格式: {cfg.note_format}")
+            print(f"视频: {url}")
+            print_separator("-")
 
         try:
             note_generator = NoteGenerator()
@@ -170,12 +176,19 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
                     or get_path_manager().get_note_output_path(task_id or "unknown")
                 )
 
-                print_separator(before=True)
-                print_success("笔记生成成功！")
-                print(f"保存到: {output_file}")
-                print_separator(after=True)
-                print_note_preview(result.markdown)
-                print_separator()
+                if quiet:
+                    note_title = getattr(result.audio_meta, "title", None) or task_id or "未知标题"
+                    print_success("笔记生成成功！")
+                    print(f"标题：{note_title}")
+                    print(f"原链接：{url}")
+                    print(f"保存到: {output_file}")
+                else:
+                    print_separator(before=True)
+                    print_success("笔记生成成功！")
+                    print(f"保存到: {output_file}")
+                    print_separator(after=True)
+                    print_note_preview(result.markdown)
+                    print_separator()
             else:
                 print("\n✗ 笔记生成失败，请检查日志")
                 sys.exit(1)
@@ -189,38 +202,28 @@ def _process_tasks(items: list, cfg: ProcessConfig, model_name: str,
         return
 
     # ── 多任务：异步并行 ──
-    print(f"批量处理 {len(items)} 个视频...")
-    print(f"使用模型: {model_name}")
-
     batch_processor = AsyncBatchProcessor(batch_name=batch_name, output_dir=output_dir)
     note_generator = NoteGenerator()
 
     def prepare_func(url: str, platform: str, task_id: str, output_path: str):
-        """同步准备阶段：下载、转写"""
-        try:
-            return note_generator.prepare(
-                video_url=url,
-                platform=platform,
-                cfg=cfg,
-                task_id=task_id,
-                output_path=output_path,
-            )
-        except Exception as e:
-            print(f"  ✗ 准备错误: {e}")
-            return None
+        """同步准备阶段：下载、转写（异常上抛给批量处理器统一打印）"""
+        return note_generator.prepare(
+            video_url=url,
+            platform=platform,
+            cfg=cfg,
+            task_id=task_id,
+            output_path=output_path,
+        )
 
     def ai_func(prepared) -> bool:
-        """异步 AI 阶段：每个 worker 线程使用独立 NoteGenerator 实例"""
-        try:
-            worker = NoteGenerator()
-            result = worker.summarize_and_save(prepared, model_name=model_name)
-            return result is not None and result.markdown
-        except Exception as e:
-            print(f"  ✗ AI 错误: {e}")
-            return False
+        """异步 AI 阶段：每个 worker 线程使用独立 NoteGenerator 实例（异常上抛给 _ai_worker）"""
+        worker = NoteGenerator()
+        result = worker.summarize_and_save(prepared, model_name=model_name)
+        return result is not None and result.markdown
 
     # 执行异步批量处理
-    success_count, fail_count = batch_processor.process(items, prepare_func, ai_func)
+    success_count, fail_count = batch_processor.process(items, prepare_func, ai_func,
+                                                        model_name=model_name)
 
     if fail_count > 0:
         sys.exit(1)

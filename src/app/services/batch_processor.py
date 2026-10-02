@@ -93,6 +93,7 @@ class AsyncBatchProcessor:
         items: List[Tuple[str, str, str, str]],
         prepare_func: Callable[[str, str, str, str], Any],
         ai_func: Callable[[Any], bool],
+        model_name: Optional[str] = None,
     ) -> Tuple[int, int]:
         """
         批量异步处理任务
@@ -100,50 +101,51 @@ class AsyncBatchProcessor:
         :param items: 任务列表，每项为 (url, platform, task_id, title)
         :param prepare_func: 准备函数，接收 (url, platform, task_id, output_path)，返回 prepared_data 或 None
         :param ai_func: AI 处理函数，接收 prepared_data，返回是否成功
+        :param model_name: 模型名称，用于头部展示
         :return: (成功数量, 失败数量)
         """
         total = len(items)
         success_count = 0
         fail_count = 0
+        task_meta = {}  # task_id -> (1-based 序号, 标题)
 
-        print(f"\n{'=' * 60}")
+        def report(ok: bool, tid: str, msg: str) -> None:
+            """打印并记录单个任务结果，序号用任务在列表中的原始序号"""
+            nonlocal success_count, fail_count
+            idx, title = task_meta.get(tid, (0, tid))
+            if ok:
+                success_count += 1
+                self.results.append(BatchResult(tid, True, msg))
+                print(f"  ✓ 任务{idx} 完成: {title} - {tid}")
+            else:
+                fail_count += 1
+                self.results.append(BatchResult(tid, False, msg))
+                print(f"  ✗ 任务{idx} 失败: {tid} - {msg}")
+
         print(f"开始批量处理: {total} 个任务 (AI 并发: {self.max_ai_workers})")
-        print(f"输出目录: {self.batch_dir}")
-        print(f"{'=' * 60}\n")
+        if model_name:
+            print(f"使用模型: {model_name}")
+        print()
 
         with ThreadPoolExecutor(max_workers=self.max_ai_workers) as executor:
             pending = set()
 
             for idx, (url, platform, task_id, title) in enumerate(items, 1):
-                print(f"[{idx}/{total}] 准备: {title or task_id}")
-                print("-" * 40)
-
+                task_meta[task_id] = (idx, title or task_id)
                 output_path = self.get_output_path(task_id)
 
                 try:
                     prepared = prepare_func(url, platform, task_id, output_path)
                     if prepared is None:
-                        fail_count += 1
-                        self.results.append(BatchResult(task_id, False, "准备阶段失败"))
-                        print("  ✗ 准备失败")
-                        print()
+                        report(False, task_id, "准备阶段失败")
                         continue
-
-                    print(f"[{idx}/{total}] 提交 AI: {title or task_id}")
 
                     # 背压控制：待处理任务过多时，等待至少一个完成
                     while len(pending) >= self.max_pending:
                         done, pending = wait(pending, return_when=FIRST_COMPLETED)
                         for future in done:
                             ok, tid, msg = future.result()
-                            if ok:
-                                success_count += 1
-                                self.results.append(BatchResult(tid, True, msg))
-                                print(f"  ✓ AI 完成: {tid}")
-                            else:
-                                fail_count += 1
-                                self.results.append(BatchResult(tid, False, msg))
-                                print(f"  ✗ AI 失败: {tid} - {msg}")
+                            report(ok, tid, msg)
 
                     future = executor.submit(
                         self._ai_worker, ai_func, prepared, task_id, output_path
@@ -151,27 +153,14 @@ class AsyncBatchProcessor:
                     pending.add(future)
 
                 except Exception as e:
-                    fail_count += 1
                     error_msg = str(e)
-                    self.results.append(BatchResult(task_id, False, error_msg))
-                    print(f"  ✗ 错误: {error_msg}")
+                    report(False, task_id, error_msg)
                     logger.error(f"批量处理任务失败 (task_id={task_id}): {e}", exc_info=True)
 
-                print()
-
             # 等待剩余任务全部完成
-            if pending:
-                print(f"等待剩余 {len(pending)} 个 AI 任务完成...\n")
-                for future in pending:
-                    ok, tid, msg = future.result()
-                    if ok:
-                        success_count += 1
-                        self.results.append(BatchResult(tid, True, msg))
-                        print(f"  ✓ AI 完成: {tid}")
-                    else:
-                        fail_count += 1
-                        self.results.append(BatchResult(tid, False, msg))
-                        print(f"  ✗ AI 失败: {tid} - {msg}")
+            for future in pending:
+                ok, tid, msg = future.result()
+                report(ok, tid, msg)
 
         # 打印摘要
         print(f"\n{'=' * 60}")

@@ -18,7 +18,8 @@ def search(keyword: str, platform: str = "bilibili", limit: int = 20) -> List[Di
     :param keyword: 搜索关键词
     :param platform: 平台 (bilibili, youtube)
     :param limit: 结果数量上限
-    :return: 列表，每项为 {title, link, play_count, like_count, favorite_count, duration, author}
+    :return: 列表，每项为 {title, link, play_count, like_count, favorite_count,
+             duration, author, pubdate, description, tags}
     """
     if platform == "bilibili":
         return _search_bilibili(keyword, limit)
@@ -32,6 +33,15 @@ def search(keyword: str, platform: str = "bilibili", limit: int = 20) -> List[Di
 def _strip_html(text: str) -> str:
     """移除 B站搜索结果中的 HTML 高亮标签"""
     return re.sub(r'<[^>]+>', '', text)
+
+
+def _split_tags(raw) -> List[str]:
+    """标签统一为列表：B站搜索返回逗号分隔字符串，YouTube 返回列表"""
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        return [t.strip() for t in raw.split(",") if t.strip()]
+    return [str(t).strip() for t in raw if str(t).strip()]
 
 
 def _parse_bilibili_duration(duration_str: str) -> int:
@@ -81,6 +91,9 @@ def _search_bilibili(keyword: str, limit: int = 20) -> List[Dict]:
                 "favorite_count": v.get("favorites"),
                 "duration": _parse_bilibili_duration(v.get("duration", "")),
                 "author": v.get("author"),
+                "pubdate": v.get("pubdate"),
+                "description": (v.get("description") or "").strip(),
+                "tags": _split_tags(v.get("tag")),
             })
             if len(results) >= limit:
                 return results
@@ -109,6 +122,9 @@ def _search_youtube(keyword: str, limit: int = 20) -> List[Dict]:
                 "favorite_count": entry.get("bookmark_count") or entry.get("favorite_count"),
                 "duration": entry.get("duration"),
                 "author": entry.get("uploader") or entry.get("channel"),
+                "pubdate": entry.get("timestamp") or entry.get("release_timestamp"),
+                "description": (entry.get("description") or "").strip(),
+                "tags": _split_tags(entry.get("tags")),
             })
 
     return results
