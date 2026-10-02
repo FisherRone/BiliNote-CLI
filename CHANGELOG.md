@@ -1,5 +1,21 @@
 # Changelog
 
+
+## [0.1.5] - 2026-10-02
+### Added
+- 支持在 config.yaml 中配置默认笔记保存目录（`output.default_dir`）。
+- 支持输出为 Obsidian 笔记，支持 Obsidian 属性功能。可在 config.yaml 中配置，或使用 `--note-format markdown` 参数
+- 单个笔记生成功能支持极简输出模式，使用 `--quiet` 参数。
+- 搜索功能目前将额外打印视频的简介和发布时间。
+
+### Fixed
+- 修复若干小 bug。
+- 日志目录由 macOS 专属的 `~/Library/Logs/bilinote-cli` 统一迁移至 `~/.bilinote/logs`（跨平台一致）。
+
+### Removed
+- 删除死代码和过时文档。
+
+
 ## [0.1.4] - 2026-06-15
 ### Add
 - bilinote check 命令加入 cookie 有效性检查的功能。
