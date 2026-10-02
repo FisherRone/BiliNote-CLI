@@ -107,6 +107,7 @@ cython_debug/
 .idea/
 .vscode/
 .qoder/
+.zcode/
 
 # Ruff
 .ruff_cache/
