@@ -19,6 +19,7 @@ _STAT_LABELS = (
     ("coin_count", "投币"),
     ("favorite_count", "收藏"),
     ("share_count", "分享"),
+    ("comment_count", "评论"),
 )
 
 
@@ -69,7 +70,9 @@ def _build_stats(raw: dict) -> str:
 
 def _normalize_tags(raw) -> List[str]:
     """兼容三种形态：list[str]（yt-dlp）、list[dict]（B 站部分版本）、
-    拼接字符串（抖音 caption+标签、快手逗号串）。去重保序。"""
+    拼接字符串（抖音 caption+标签、快手逗号串）。
+    tag 内部的空白字符（含空格、全角空格）全部去除——Obsidian 标签
+    不允许空格；清理后只剩数字或为空的 tag 直接剔除。去重保序。"""
     if not raw:
         return []
     if isinstance(raw, str):
@@ -82,10 +85,11 @@ def _normalize_tags(raw) -> List[str]:
 
     seen, tags = set(), []
     for name in candidates:
-        name = name.strip().lstrip("#").strip()
-        if name and name not in seen:
-            seen.add(name)
-            tags.append(name)
+        name = re.sub(r"\s+", "", name).lstrip("#")
+        if not name or name.isdigit() or name in seen:
+            continue
+        seen.add(name)
+        tags.append(name)
     return tags
 
 

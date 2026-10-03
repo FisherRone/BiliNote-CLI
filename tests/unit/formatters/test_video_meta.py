@@ -49,6 +49,21 @@ class TagNormalizationTest(unittest.TestCase):
                                                raw_info={"tags": "今天聊聊AI #人工智能 #科技"}))
         self.assertEqual(meta.tags, ["人工智能", "科技"])
 
+    def test_whitespace_inside_tags_removed(self):
+        meta = build_video_meta(_make_prepared(raw_info={
+            "tags": ["AI 学习", "科技　生活", " #笔记整理 "]}))
+        self.assertEqual(meta.tags, ["AI学习", "科技生活", "笔记整理"])
+
+    def test_digit_only_tags_dropped(self):
+        meta = build_video_meta(_make_prepared(raw_info={
+            "tags": ["2023", "12 34", "１２３", "  ", "4K", "人工智能"]}))
+        self.assertEqual(meta.tags, ["4K", "人工智能"])
+
+    def test_dedup_after_whitespace_removal(self):
+        meta = build_video_meta(_make_prepared(raw_info={
+            "tags": ["AI 学习", "AI学习"]}))
+        self.assertEqual(meta.tags, ["AI学习"])
+
     def test_empty_tags(self):
         self.assertEqual(build_video_meta(_make_prepared()).tags, [])
 
@@ -59,12 +74,18 @@ class FieldMappingTest(unittest.TestCase):
             "uploader": "某UP主", "description": "简介",
             "view_count": 100, "like_count": 10,
             "coin_count": 5, "favorite_count": 3, "share_count": 2,
+            "comment_count": 12345,
         }))
         self.assertEqual(meta.title, "测试标题")
         self.assertEqual(meta.author, "某UP主")
         self.assertEqual(meta.description, "简介")
-        self.assertEqual(meta.stats, "100 播放 · 10 点赞 · 5 投币 · 3 收藏 · 2 分享")
+        self.assertEqual(meta.stats, "100 播放 · 10 点赞 · 5 投币 · 3 收藏 · 2 分享 · 1.2万 评论")
         self.assertEqual(meta.platform, "bilibili")
+
+    def test_stats_skip_missing_comment_count(self):
+        meta = build_video_meta(_make_prepared(raw_info={
+            "view_count": 100, "like_count": 10}))
+        self.assertEqual(meta.stats, "100 播放 · 10 点赞")
 
     def test_author_prefers_uploader_over_author(self):
         meta = build_video_meta(_make_prepared(

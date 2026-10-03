@@ -74,6 +74,7 @@ def prepend_video_meta(markdown: str | None, raw_info: dict) -> str | None:
     coin_count = raw_info.get("coin_count")
     favorite_count = raw_info.get("favorite_count")
     share_count = raw_info.get("share_count")
+    comment_count = raw_info.get("comment_count")
     tags = raw_info.get("tags") or []
 
     if description and len(description) > 200:
@@ -95,6 +96,8 @@ def prepend_video_meta(markdown: str | None, raw_info: dict) -> str | None:
         stats_parts.append(f"{format_number(favorite_count)} 收藏")
     if share_count is not None:
         stats_parts.append(f"{format_number(share_count)} 分享")
+    if comment_count is not None:
+        stats_parts.append(f"{format_number(comment_count)} 评论")
     stats_str = " · ".join(stats_parts) if stats_parts else ""
 
     tag_names = []
@@ -134,8 +137,8 @@ def append_top_comments(markdown: str | None, comments: list) -> str | None:
     blocks = []
     for c in comments:
         message = c.message
-        if len(message) > 80:
-            message = message[:80] + "..."
+        if len(message) > 500:
+            message = message[:500] + "..."
         # 将评论内部的换行符替换为 "\n>"，确保每行都有引用前缀
         message = message.replace("\n", "\n>")
         block = f">{c.uname}（LV{c.level}）：\n>{message}\n>👍 {c.like_count}"
