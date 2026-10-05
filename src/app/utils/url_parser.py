@@ -1,4 +1,5 @@
 import re
+import hashlib
 from typing import Optional
 import requests
 import os
@@ -66,6 +67,11 @@ def extract_video_id(url: str, platform: str) -> Optional[str]:
         # 匹配 douyin.com/video/1234567890123456789
         match = re.search(r"/video/(\d+)", url)
         return match.group(1) if match else None
+
+    elif platform == "local":
+        # 本地文件用绝对路径哈希做稳定 ID：同一路径重跑可复用转写缓存，
+        # 不同目录下的同名文件不会互相串缓存
+        return "local-" + hashlib.sha1(os.path.realpath(url).encode("utf-8")).hexdigest()[:16]
 
     return None
 

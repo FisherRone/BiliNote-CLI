@@ -91,7 +91,9 @@ class TaskPreparer:
             )
 
             # 3. 如果前面没拿到字幕，走转写流程
-            if transcript is None and task_id:
+            # （task_id 可能为 None（如异常路径），_transcribe_audio 内部已对 None 兼容，
+            #   不能因 task_id 为空就跳过转写，否则空转录文本会流入 GPT 阶段）
+            if transcript is None:
                 transcript = self._transcribe_audio(
                     audio_file=audio_meta.file_path,
                     task_id=task_id,

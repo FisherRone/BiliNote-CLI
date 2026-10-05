@@ -41,6 +41,7 @@ class YoutubeDownloader(Downloader, ABC):
             'noplaylist': True,
             'quiet': quiet,
             'no_warnings': quiet,
+            'noprogress': quiet,
         }
 
         if skip_download:
@@ -96,6 +97,7 @@ class YoutubeDownloader(Downloader, ABC):
             'noplaylist': True,
             'quiet': quiet,
             'no_warnings': quiet,
+            'noprogress': quiet,
             'merge_output_format': 'mp4',  # 确保合并成 mp4
         }
 

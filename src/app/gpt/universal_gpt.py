@@ -239,6 +239,8 @@ class UniversalGPT(GPT):
         )
 
         current_partials = list(partials)
+        if not current_partials:
+            raise ValueError("没有可合并的 GPT 分段结果")
         while len(current_partials) > 1:
             groups = merge_chunker.group_texts_by_budget(current_partials, build_messages)
             new_partials = []
@@ -296,6 +298,9 @@ class UniversalGPT(GPT):
                 style=source.style,
                 extras=source.extras
             )
+
+        if not chunks:
+            raise ValueError("转录内容为空，无法生成笔记（未获取到字幕或语音识别结果）")
 
         partials = []
         if checkpoint_key and source_signature:

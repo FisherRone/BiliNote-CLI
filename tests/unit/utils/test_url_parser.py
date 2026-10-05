@@ -65,6 +65,26 @@ class TestExtractVideoId(unittest.TestCase):
         """提取抖音视频 ID"""
         self.assertEqual(extract_video_id("https://www.douyin.com/video/1234567890123456789", "douyin"), "1234567890123456789")
 
+    def test_extract_local_id(self):
+        """本地文件返回 local- 前缀的路径哈希 ID"""
+        vid = extract_video_id("/some/dir/2.第二周.mp4", "local")
+        self.assertIsNotNone(vid)
+        self.assertTrue(vid.startswith("local-"))
+
+    def test_extract_local_id_stable(self):
+        """同一路径多次提取 ID 保持一致（转写缓存可复用）"""
+        self.assertEqual(
+            extract_video_id("/some/dir/1.mp4", "local"),
+            extract_video_id("/some/dir/1.mp4", "local"),
+        )
+
+    def test_extract_local_id_unique_per_path(self):
+        """不同目录下的同名文件 ID 不同（避免缓存串用）"""
+        self.assertNotEqual(
+            extract_video_id("/a/1.mp4", "local"),
+            extract_video_id("/b/1.mp4", "local"),
+        )
+
     def test_extract_none_for_invalid(self):
         """无效链接返回 None"""
         self.assertIsNone(extract_video_id("https://example.com", "bilibili"))

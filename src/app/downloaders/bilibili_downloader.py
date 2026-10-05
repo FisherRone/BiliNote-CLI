@@ -80,6 +80,10 @@ class BilibiliDownloader(Downloader, ABC):
             'noplaylist': True,
             'quiet': quiet,
             'no_warnings': quiet,
+            # 与 yt-dlp CLI -q 语义对齐：quiet 时彻底关闭进度输出，
+            # 否则进度行走独立打印机，仅靠下载结束时的 ANSI 擦除隐藏，
+            # 异常路径下会残留 [download] 100% of ... 收尾行
+            'noprogress': quiet,
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
                 'User-Agent': _USER_AGENT,
@@ -147,6 +151,7 @@ class BilibiliDownloader(Downloader, ABC):
             'noplaylist': True,
             'quiet': quiet,
             'no_warnings': quiet,
+            'noprogress': quiet,
             'merge_output_format': 'mp4',  # 确保合并成 mp4
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
@@ -208,6 +213,7 @@ class BilibiliDownloader(Downloader, ABC):
             'skip_download': True,
             'outtmpl': os.path.join(output_dir, f'{video_id}.%(ext)s'),
             'quiet': True,
+            'noprogress': True,
             'http_headers': {
                 'Referer': 'https://www.bilibili.com',
                 'User-Agent': _USER_AGENT,

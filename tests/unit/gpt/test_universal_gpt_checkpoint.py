@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from app.gpt.universal_gpt import UniversalGPT
+from app.models.gpt_model import GPTSource
 
 
 class _FailingCompletions:
@@ -51,6 +52,19 @@ class TestUniversalGPTCheckpoint(unittest.TestCase):
                 os.environ.pop("OPENAI_RETRY_ATTEMPTS", None)
             else:
                 os.environ["OPENAI_RETRY_ATTEMPTS"] = original_attempts
+
+    def test_merge_partials_empty_raises_value_error(self):
+        """空分段列表应报清晰错误而非 IndexError"""
+        gpt = UniversalGPT(_DummyClient(), model="mock-model")
+        with self.assertRaises(ValueError):
+            gpt._merge_partials([], None, None)
+
+    def test_summarize_empty_segments_raises_value_error(self):
+        """空转录文本应在进入 GPT 前报清晰错误"""
+        gpt = UniversalGPT(_DummyClient(), model="mock-model")
+        source = GPTSource(segment=[], title="测试", tags="")
+        with self.assertRaises(ValueError):
+            gpt.summarize(source)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@
 """
 
 import os
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -188,6 +189,41 @@ class TestBilibiliDownloaderWithCookie(unittest.TestCase):
 
         self.assertIsNone(cookie_file)
         self.assertNotIn("cookiefile", ydl_opts)
+
+
+class TestBilibiliDownloaderQuietParams(unittest.TestCase):
+    """quiet 应同步映射为 noprogress（对齐 yt-dlp CLI -q 行为）
+
+    只传 quiet 时 yt-dlp 进度行走独立打印机，仅靠下载结束时的 ANSI
+    擦除隐藏，异常路径会残留 [download] 100% of ... 收尾行。
+    """
+
+    def _download_and_capture_opts(self, quiet):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with patch("app.downloaders.bilibili_downloader.get_cookie", return_value=None), \
+                 patch("yt_dlp.YoutubeDL") as mock_ydl_class:
+                mock_ydl = MagicMock()
+                mock_ydl_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
+                mock_ydl_class.return_value.__exit__ = MagicMock(return_value=False)
+
+                downloader = BilibiliDownloader()
+                downloader.download(
+                    video_url="https://www.bilibili.com/video/BV1test",
+                    output_dir=tmp_dir,
+                    skip_download=True,
+                    quiet=quiet,
+                )
+                return mock_ydl_class.call_args[0][0]
+
+    def test_quiet_true_sets_noprogress(self):
+        opts = self._download_and_capture_opts(quiet=True)
+        self.assertTrue(opts["quiet"])
+        self.assertTrue(opts["noprogress"])
+
+    def test_quiet_false_keeps_progress(self):
+        opts = self._download_and_capture_opts(quiet=False)
+        self.assertFalse(opts["quiet"])
+        self.assertFalse(opts["noprogress"])
 
 
 if __name__ == "__main__":
