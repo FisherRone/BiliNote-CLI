@@ -1,6 +1,13 @@
 # Changelog
 
 
+
+## [0.1.6] - 2026-10-05
+### Fixed
+- 修复本地视频无法处理的 bug。
+- 修复 --quiet 模式依然输出下载进度的 bug。
+
+
 ## [0.1.5] - 2026-10-02
 ### Added
 - 支持在 config.yaml 中配置默认笔记保存目录（`output.default_dir`）。
