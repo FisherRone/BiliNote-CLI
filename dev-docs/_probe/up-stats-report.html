@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B站 UP 主视频数据验证报告</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:32px;background:#f7f7f8;color:#1a1a1a;
+font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin:0 0 6px}
+.sub{color:#666;font-size:13px;margin-bottom:20px}
+.card{background:#fff;border:1px solid #e5e5e7;border-radius:10px;padding:18px 20px;margin-bottom:18px}
+.card h2{font-size:15px;margin:0 0 12px;color:#333}
+.kv{display:flex;gap:28px;flex-wrap:wrap}
+.kv div{font-size:13px;color:#666}
+.kv b{display:block;font-size:18px;color:#1a1a1a;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#fafafa;color:#666;font-weight:600;font-size:12px;text-align:right;
+padding:9px 10px;border-bottom:1px solid #e5e5e7;white-space:nowrap}
+th:nth-child(1),th:nth-child(2){text-align:left}
+td{padding:10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+tr:hover td{background:#fafafa}
+.rk{width:34px;color:#999;font-size:12px;text-align:center}
+.ti{width:42%;line-height:1.45}
+.ti a{color:#1a1a1a;text-decoration:none;font-weight:500}
+.ti a:hover{color:#fb7299}
+.mt{color:#999;font-size:11px;margin-top:2px;font-weight:400}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hi{color:#fb7299;font-weight:600}
+.sm{color:#888;font-size:12px}
+.ok{display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:4px;
+padding:2px 8px;font-size:12px;font-weight:600;margin-right:6px}
+code{background:#f0f0f2;padding:1px 6px;border-radius:3px;font-size:12px;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.note{font-size:12px;color:#888;line-height:1.8}
+</style></head><body><div class="wrap">
+<h1>B站 UP 主视频数据抓取 · 能力验证</h1>
+<div class="sub">验证路径：单个视频链接 → UP 主 → 该 UP 主 12 个视频的完整元数据 &nbsp;·&nbsp; 全程只读，未修改任何项目代码</div>
+
+<div class="card">
+<h2>测试链路结果</h2>
+<div style="margin-bottom:14px">
+<span class="ok">通过</span>视频 <code>BV1GJ411x7h7</code> → UP 主名 + mid
+<span class="ok">通过</span>mid → 投稿列表（三种排序）
+<span class="ok">通过</span>逐视频补全点赞/投币/收藏/弹幕/评论
+<span class="ok">通过</span>交叉验证另一 UP 主（mid=2「碧诗」）
+</div>
+<div class="kv">
+<div>UP 主<b>索尼音乐中国</b></div>
+<div>mid<b>486906719</b></div>
+<div>取得视频数<b>12</b></div>
+<div>排序依据<b>播放量降序</b></div>
+</div></div>
+
+<div class="card">
+<h2>索尼音乐中国 · 播放量 TOP 12</h2>
+<table><thead><tr><th>#</th><th>标题</th><th>播放</th><th>点赞</th><th>投币</th><th>收藏</th><th>弹幕</th><th>评论</th></tr></thead>
+<tbody><tr>
+<td class="rk">1</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1Dr4y1K7V9" target="_blank">Cö shu Nie「give it back」（TV动画《咒术回战》ED2）</a><div class="mt">BV1Dr4y1K7V9 · 03:36 · 2021-02-11</div></td>
+<td class="n hi">271.0万</td>
+<td class="n">2.0万</td>
+<td class="n">7244</td>
+<td class="n">3904</td>
+<td class="n sm">949</td>
+<td class="n sm">649</td></tr><tr>
+<td class="rk">2</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1DD4y1L73Y" target="_blank">《不熄的光》——火影忍者手游七周年重燃主题曲</a><div class="mt">BV1DD4y1L73Y · 03:53 · 2022-12-28</div></td>
+<td class="n hi">267.1万</td>
+<td class="n">10.7万</td>
+<td class="n">3.1万</td>
+<td class="n">2.2万</td>
+<td class="n sm">4170</td>
+<td class="n sm">6160</td></tr><tr>
+<td class="rk">3</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1oJ411s7Yf" target="_blank">【官方MV】织部里沙 LiSA - oath sign (Fate/Zero 第一季OP)</a><div class="mt">BV1oJ411s7Yf · 04:11 · 2020-01-01</div></td>
+<td class="n hi">237.5万</td>
+<td class="n">1.8万</td>
+<td class="n">4739</td>
+<td class="n">5807</td>
+<td class="n sm">648</td>
+<td class="n sm">1259</td></tr><tr>
+<td class="rk">4</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1qJ411t7ef" target="_blank">我们的歌 - 王力宏</a><div class="mt">BV1qJ411t7ef · 04:31 · 2020-01-11</div></td>
+<td class="n hi">234.7万</td>
+<td class="n">4.4万</td>
+<td class="n">1.2万</td>
+<td class="n">3.2万</td>
+<td class="n sm">1765</td>
+<td class="n sm">3453</td></tr><tr>
+<td class="rk">5</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1Eb4y1Q7GD" target="_blank">【官方MV】宇多田ヒカル「One Last Kiss」（电影《新·福音战士剧场版：终》主题曲）-宇多田光</a><div class="mt">BV1Eb4y1Q7GD · 04:19 · 2021-03-30</div></td>
+<td class="n hi">218.5万</td>
+<td class="n">10.8万</td>
+<td class="n">7.3万</td>
+<td class="n">7.8万</td>
+<td class="n sm">1883</td>
+<td class="n sm">2664</td></tr><tr>
+<td class="rk">6</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV11q4y1g7xt" target="_blank">King Gnu「BOY」（TV动画《国王排名》OP）</a><div class="mt">BV11q4y1g7xt · 04:05 · 2021-11-07</div></td>
+<td class="n hi">215.9万</td>
+<td class="n">4.5万</td>
+<td class="n">4914</td>
+<td class="n">8733</td>
+<td class="n sm">533</td>
+<td class="n sm">295</td></tr><tr>
+<td class="rk">7</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1BX4ZzjE3Z" target="_blank">Ella Rosa「Weapon (Official Video)」</a><div class="mt">BV1BX4ZzjE3Z · 03:21 · 2025-08-08</div></td>
+<td class="n hi">204.3万</td>
+<td class="n">4.1万</td>
+<td class="n">7167</td>
+<td class="n">5.7万</td>
+<td class="n sm">3335</td>
+<td class="n sm">3901</td></tr><tr>
+<td class="rk">8</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1pa4y177qi" target="_blank">七音阿卡莉Nanaoakari「完全放弃宣言」</a><div class="mt">BV1pa4y177qi · 04:26 · 2020-09-07</div></td>
+<td class="n hi">197.4万</td>
+<td class="n">8.4万</td>
+<td class="n">3.3万</td>
+<td class="n">7.0万</td>
+<td class="n sm">989</td>
+<td class="n sm">1672</td></tr><tr>
+<td class="rk">9</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1Hf4y1W7yE" target="_blank">【官方MV】LiSA「紅蓮華」（TV动画《鬼灭之刃》OP）</a><div class="mt">BV1Hf4y1W7yE · 03:56 · 2021-04-20</div></td>
+<td class="n hi">181.5万</td>
+<td class="n">3.4万</td>
+<td class="n">7191</td>
+<td class="n">7290</td>
+<td class="n sm">558</td>
+<td class="n sm">437</td></tr><tr>
+<td class="rk">10</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1eS4y1X7sH" target="_blank">【官方MV】LiSA「白银」（TV动画《鬼灭之刃·无限列车篇》ED）</a><div class="mt">BV1eS4y1X7sH · 04:27 · 2021-12-03</div></td>
+<td class="n hi">176.3万</td>
+<td class="n">7236</td>
+<td class="n">2025</td>
+<td class="n">1452</td>
+<td class="n sm">406</td>
+<td class="n sm">412</td></tr><tr>
+<td class="rk">11</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1CJ411s7wo" target="_blank">What Makes You Beautiful - One Direction</a><div class="mt">BV1CJ411s7wo · 03:27 · 2020-01-01</div></td>
+<td class="n hi">156.1万</td>
+<td class="n">4.4万</td>
+<td class="n">1.2万</td>
+<td class="n">5.1万</td>
+<td class="n sm">2060</td>
+<td class="n sm">1220</td></tr><tr>
+<td class="rk">12</td>
+<td class="ti"><a href="https://www.bilibili.com/video/BV1Hb4y1Z7VN" target="_blank">【官方MV】宇多田ヒカル「PINK BLOOD」（TV动画《致不灭的你》主题曲）</a><div class="mt">BV1Hb4y1Z7VN · 03:20 · 2021-06-22</div></td>
+<td class="n hi">154.6万</td>
+<td class="n">2.8万</td>
+<td class="n">6573</td>
+<td class="n">5223</td>
+<td class="n sm">701</td>
+<td class="n sm">813</td></tr></tbody></table>
+</div>
+
+<div class="card">
+<h2>可用的接口能力</h2>
+<table style="font-size:13px"><thead><tr><th>能力</th><th>实现</th><th>说明</th></tr></thead><tbody>
+<tr><td class="ti">视频 → UP 主</td><td><code>yt_dlp.extract_info</code></td><td class="note">取 <code>uploader</code> / <code>uploader_id</code>(mid)，带 cookie 稳定</td></tr>
+<tr><td class="ti">UP 主投稿列表</td><td><code>bilibili_api.user.User.get_videos</code></td><td class="note">支持 order = pubdate / click / stow，ps 单页最多 30</td></tr>
+<tr><td class="ti">单视频完整统计</td><td><code>bilibili_api.video.Video.get_info</code></td><td class="note">取 stat.view / like / coin / favorite / danmaku / reply</td></tr>
+</tbody></table>
+<div class="note" style="margin-top:12px">
+关键点：空间列表接口<b>不返回点赞和收藏</b>（<code>video_review</code> 是弹幕数，<code>review</code> 恒为 0），
+必须逐个调 <code>get_info</code> 补全。直接裸调 <code>api.bilibili.com/x/web-interface/archive/stat</code> 会触发 412 风控，走 bilibili_api 更稳。
+</div>
+</div>
+</div></body></html>

@@ -108,6 +108,26 @@ class UniversalGPT(GPT):
     def list_models(self):
         return self.client.models.list()
 
+    def ask(self, user_prompt: str, system_prompt: str = "") -> str:
+        """单次问答：适用于不依赖转写分块的短文本任务（如 UP 主可靠性分析）。
+
+        :param user_prompt: 用户消息正文
+        :param system_prompt: 可选的系统消息
+        :return: 模型返回文本
+        """
+        messages = []
+        if system_prompt:
+            messages.append({
+                "role": "system",
+                "content": [{"type": "text", "text": system_prompt}],
+            })
+        messages.append({
+            "role": "user",
+            "content": [{"type": "text", "text": user_prompt}],
+        })
+        response = self._chat_completion_create(messages)
+        return response.choices[0].message.content.strip()
+
 
 
     def _build_merge_messages(self, partials: list) -> list:
